@@ -173,10 +173,10 @@ BEGIN
             ('GDR', (SELECT baseline_score FROM bench_competencies WHERE pillar_code='GDR'), fs.gdr::numeric, fs.tv_gdr_match::numeric, fs.tgv_competency_match_rate),
             ('PAPI_T', (SELECT baseline_score FROM bench_papi WHERE scale_code='Papi_T'), fs.papi_t::numeric, fs.tv_papi_t_match::numeric, fs.tgv_behavioral_match_rate),
             
-            -- 2. FIX (Values Length): Menghapus kolom duplikat
+            -- 2. Menghapus kolom duplikat
             ('Strengths', NULL, NULL, fs.tv_strengths_match::numeric, fs.tgv_behavioral_match_rate),
             
-            -- 3. FIX (Contextual): Menggunakan tgv_contextual_match_rate untuk TV dan TGV
+            -- 3. Menggunakan tgv_contextual_match_rate untuk TV dan TGV
             ('Years_of_Service', fs.yrs_median, fs.years_of_service_months::numeric, fs.tgv_contextual_match_rate, fs.tgv_contextual_match_rate)
         ) AS tv(tv_name, baseline_score, user_score, tv_match_rate, tgv_match_rate)
     )
