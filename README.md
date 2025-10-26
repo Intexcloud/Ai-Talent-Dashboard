@@ -105,6 +105,13 @@ Buka http://localhost:8501 di browser Anda untuk melihat aplikasi beraksi.
 ## 6. Contoh Tampilan Aplikasi
 
 Berikut adalah beberapa tangkapan layar dari aplikasi dashboard akhir:
-  * Halaman Input Pengguna & Pembuatan AI: ![Screenshot Halaman Input](screenshots/input_page.png)
-  * Dasbor Peringkat Talenta & Visualisasi: ![Screenshot Dasbor](screenshots/dashboard_view.png)
-  * Perbandingan Detail Kandidat (Contoh Radar Chart): ![Screenshot Detail](screenshots/detail_view.png)
+  * Halaman Input Pengguna & Pembuatan AI:
+    * ![Halaman Input](<img width="1917" height="882" alt="Dashboard 1" src="https://github.com/user-attachments/assets/f78d4d6a-df38-40e0-bcb4-9d33bfc959ec" />)
+    * ![AI](<img width="1893" height="840" alt="Dashboard 4" src="https://github.com/user-attachments/assets/d52614b4-098e-4fe2-86ec-d737e0e80b9e" />)
+
+  * Dasbor Peringkat Talenta & Visualisasi:
+    ![Visualisasi](<img width="1917" height="846" alt="Dashboard 2" src="https://github.com/user-attachments/assets/62901143-913f-4b21-bf95-e1e06ed68b6e" />)
+
+  * Analisa Detail Kandidat (Contoh Radar Chart):
+    ![Detail Kandidat](<img width="1901" height="803" alt="Dashboard 3" src="https://github.com/user-attachments/assets/6d9060a0-f958-4cc1-a0f4-29e04a47881a" />)
+
