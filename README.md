@@ -106,8 +106,8 @@ Buka http://localhost:8501 di browser Anda untuk melihat aplikasi beraksi.
 
 Berikut adalah beberapa tangkapan layar dari aplikasi dashboard akhir:
   * Halaman Input Pengguna & Pembuatan AI:
-    * ![Halaman Input](Screenshots/Dashboard1.png)
-    * ![AI](Screenshots/Dashboard4.png)
+      ![Halaman Input](Screenshots/Dashboard1.png)
+      ![AI](Screenshots/Dashboard4.png)
 
   * Dasbor Peringkat Talenta & Visualisasi:
     ![Visualisasi](Screenshots/Dashboard2.png)
