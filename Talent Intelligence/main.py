@@ -259,13 +259,6 @@ if not results_df.empty:
         top_score_insight = results_df.iloc[0]['final_match_rate']
         st.markdown(f"Kandidat teratas, **{top_candidate_name_insight}**, mencapai skor **{top_score_insight:.2f}%**. "
                     f"Ini menunjukkan keselarasan yang kuat dengan profil benchmark. Analisis lebih lanjut pada Radar Chart dan Detail Skor TV dapat mengungkapkan area kekuatan dan pengembangan spesifik.")
-        # Di sini Anda bisa menambahkan logika narasi otomatis atau panggilan LLM
-
-    # 3. Distribusi Skor (Opsional - bisa diaktifkan jika diperlukan)
-    # st.subheader("Distribusi Skor Kecocokan (Top 10)")
-    # fig_hist = px.histogram(summary_df.head(10), x="final_match_rate", nbins=5, title="Distribusi Final Match Rate (Top 10)")
-    # st.plotly_chart(fig_hist)
-
 
 # Kondisi jika tombol ditekan tapi tidak ada hasil
 elif run_button:
@@ -278,12 +271,9 @@ generate_profile = st.sidebar.button("Buat Profil Pekerjaan (AI)")
 
 if generate_profile:
      st.sidebar.markdown("*(Placeholder: Di sini akan ada panggilan ke API LLM)*")
-     # prompt = f"..." 
-     # response = call_llm_api(prompt) 
-     # st.subheader("Draf Profil Pekerjaan (AI)")
-     # st.markdown(response)
      st.sidebar.success("Fitur AI belum diimplementasikan dalam contoh ini.")
 
 # --- Footer ---
 st.sidebar.markdown("---")
+
 st.sidebar.caption("Talent Match App v1.0")
