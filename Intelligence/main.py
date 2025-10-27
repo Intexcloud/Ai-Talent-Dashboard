@@ -4,13 +4,23 @@ import psycopg2
 import json
 import plotly.graph_objects as go
 import plotly.express as px
-from openai import OpenAI # Diperbarui: Menggunakan library OpenAI untuk OpenRouter
-# Dihapus: requests dan time
+from openai import OpenAI 
 
 # --- Konfigurasi Halaman & Judul ---
 st.set_page_config(layout="wide", page_title="AI Talent Match Intelligence")
 st.title("🚀 AI Talent Match Intelligence Dashboard")
 st.markdown("Menemukan kandidat internal terbaik berdasarkan profil benchmark.")
+
+# --- Inisialisasi Session State ---
+# Menyimpan hasil query agar tidak hilang saat widget berinteraksi
+if 'results_df' not in st.session_state:
+    st.session_state.results_df = pd.DataFrame()
+# Menyimpan profil AI
+if 'generated_profile' not in st.session_state:
+    st.session_state['generated_profile'] = None
+# Menyimpan state pilihan kandidat di dropdown
+if 'selected_candidate_detail' not in st.session_state:
+    st.session_state['selected_candidate_detail'] = None
 
 # --- Dihapus: Variabel Global Gemini API ---
 
@@ -20,9 +30,13 @@ def check_secrets_key(key_path, description):
     keys = key_path.split('.')
     current = st.secrets
     for key in keys:
-        current = current.get(key)
+        if hasattr(current, 'get'):
+            current = current.get(key)
+        else:
+            # Jika 'current' bukan dict/object yang bisa di 'get', berarti key tidak ada
+            return None
         if current is None:
-            # st.error(f"Error: Kunci '{key_path}' ({description}) tidak ditemukan di Streamlit Secrets.")
+             st.error(f"Error: Kunci '{key_path}' ({description}) tidak ditemukan di Streamlit Secrets.")
             return None
     return current
 
@@ -184,13 +198,16 @@ def run_talent_match_query(conn, bench_ids, weights):
     
     # 2. Eksekusi Query
     try:
-        # PENTING: diasumsikan fn_talent_management(TEXT[], JSONB) sudah dibuat di Postgres
         query = "SELECT * FROM fn_talent_management(%s::TEXT[], %s::JSONB);" 
         df_results = pd.read_sql(query, conn, params=(bench_ids, weights_json))
         
-        # Penamaan ulang kolom (misalnya: o_employee_id -> employee_id)
         df_results.columns = [col.replace('o_', '') for col in df_results.columns]
         
+        rate_cols = [col for col in df_results.columns if 'match_rate' in col]
+        for col in rate_cols:
+            if pd.api.types.is_numeric_dtype(df_results[col]):
+                df_results[col] = df_results[col].clip(0, 100)
+
         # Tambahkan kolom fullname untuk tampilan yang lebih baik (jika belum ada)
         df_employees = get_employee_list(conn)
         if not df_employees.empty and 'fullname' not in df_results.columns:
@@ -222,7 +239,7 @@ def create_radar_chart(df, candidate_id, candidate_name):
     for cat in categories:
         score_row = candidate_data[candidate_data['tgv_name'] == cat]
         score = score_row['tgv_match_rate'].iloc[0] if not score_row.empty and 'tgv_match_rate' in score_row.columns else 0
-        candidate_scores.append(score)
+        candidate_scores.append(max(0, min(score, 100))) 
 
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(
@@ -252,9 +269,52 @@ def create_radar_chart(df, candidate_id, candidate_name):
     )
     return fig
 
+# (BARU) Fungsi Heatmap TV
+def create_tv_heatmap(df, candidate_id, candidate_name):
+    """
+    (BARU) Membuat Heatmap skor tv_match_rate untuk kandidat yang dipilih.
+    """
+    candidate_data = df[df['employee_id'] == candidate_id].copy()
+    
+    if 'tgv_name' not in candidate_data.columns or 'tv_name' not in candidate_data.columns or 'tv_match_rate' not in candidate_data.columns:
+        st.warning("Data tidak lengkap untuk membuat Heatmap TV (memerlukan tgv_name, tv_name, tv_match_rate).")
+        return go.Figure()
+
+    # Buat pivot table untuk heatmap
+    try:
+        df_pivot = candidate_data.pivot(
+            index='tgv_name', 
+            columns='tv_name', 
+            values='tv_match_rate'
+        )
+    except Exception as e:
+        st.warning(f"Gagal membuat pivot data untuk heatmap: {e}")
+        return go.Figure()
+
+    fig = px.imshow(
+        df_pivot,
+        text_auto='.0f',
+        aspect="auto",
+        color_continuous_scale='RdYlGn', 
+        range_color=[0, 100], 
+        title=f"Heatmap Kecocokan Talent Variable (TV) untuk {candidate_name}"
+    )
+    
+    fig.update_layout(
+        xaxis_title="Talent Variable (TV)",
+        yaxis_title="Talent Group Variable (TGV)",
+        height=400, 
+        margin=dict(l=40, r=40, t=50, b=40),
+        xaxis_showgrid=False,
+        yaxis_showgrid=False
+    )
+    fig.update_xaxes(side="bottom")
+    
+    return fig
+
 def create_strengths_gaps_charts(df, candidate_id):
     """
-    (BARU) Membuat bar chart horizontal untuk Top 5 Kekuatan dan Kesenjangan TV.
+    Membuat bar chart horizontal untuk Top 5 Kekuatan dan Kesenjangan TV.
     """
     candidate_data = df[df['employee_id'] == candidate_id].copy()
     
@@ -263,6 +323,7 @@ def create_strengths_gaps_charts(df, candidate_id):
 
     # Pastikan tv_match_rate adalah numerik
     candidate_data['tv_match_rate'] = pd.to_numeric(candidate_data['tv_match_rate'], errors='coerce')
+    candidate_data['tv_match_rate'] = candidate_data['tv_match_rate'].clip(0, 100) # (BARU) Clip data TV
     candidate_data = candidate_data.dropna(subset=['tv_match_rate'])
 
     # Urutkan berdasarkan TV Match Rate
@@ -299,7 +360,7 @@ def create_strengths_gaps_charts(df, candidate_id):
         title='Top 5 Kesenjangan (Talent Variables)',
         labels={'tv_match_rate': 'Match Rate (%)', 'tv_name': 'Talent Variable'},
         color='tv_match_rate',
-        color_continuous_scale=px.colors.sequential.Reds_r, 
+        color_continuous_scale=px.colors.sequential.Reds_r, # Reverse Reds
         range_color=[0, 50],
         text='tv_match_rate'
     )
@@ -307,6 +368,87 @@ def create_strengths_gaps_charts(df, candidate_id):
     fig_gaps.update_layout(yaxis={'categoryorder':'total descending'}, height=350, margin=dict(l=40, r=40, t=50, b=40))
 
     return fig_strengths, fig_gaps
+
+# Fungsi Ringkasan Wawasan Kandidat Dinamis
+def generate_candidate_summary(selected_candidate_id, candidate_name, summary_df, results_df):
+    """
+    (BARU) Menghasilkan ringkasan insight dinamis (menggunakan st.metric)
+    untuk kandidat yang dipilih.
+    """
+    try:
+        # 1. Ambil Data Ringkasan (Peringkat, Skor Akhir)
+        candidate_summary = summary_df[summary_df['employee_id'] == selected_candidate_id].iloc[0]
+        
+        # 2. Ambil Data Detail TV/TGV
+        candidate_data_tv = results_df[results_df['employee_id'] == selected_candidate_id]
+
+        # 3. Hitung TGV Terbaik/Terburuk
+        tgv_data = candidate_data_tv.drop_duplicates(subset=['tgv_name']).sort_values('tgv_match_rate', ascending=False)
+        best_tgv = tgv_data.iloc[0]
+        worst_tgv = tgv_data.iloc[-1]
+
+        # 4. Hitung TV Terbaik (Kekuatan) / Terburuk (Kesenjangan)
+        tv_data = candidate_data_tv.sort_values('tv_match_rate', ascending=False)
+        best_tv = tv_data.iloc[0]
+        worst_tv = tv_data.iloc[-1]
+        
+        # 5. Tampilkan Metrik
+        st.subheader(f"💡 Ringkasan Wawasan untuk {candidate_name}")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        # Kolom 1: Peringkat & Skor
+        col1.metric(
+            label="Peringkat Keseluruhan",
+            value=f"#{int(candidate_summary['rank'])}",
+            delta=f"{candidate_summary['final_match_rate']:.2f}% Match",
+            delta_color="off"
+        )
+        
+        # Kolom 2: TGV Terbaik
+        col2.metric(
+            label="TGV Terbaik",
+            value=best_tgv['tgv_name'],
+            delta=f"{best_tgv['tgv_match_rate']:.2f}%",
+            delta_color="normal" # "normal" = hijau
+        )
+        
+        # Kolom 3: TGV Terburuk
+        col3.metric(
+            label="TGV Terendah",
+            value=worst_tgv['tgv_name'],
+            delta=f"{worst_tgv['tgv_match_rate']:.2f}%",
+            delta_color="inverse" # "inverse" = merah
+        )
+        
+        # Kolom 4: Info Tambahan
+        col4.metric(
+            label="Direktorat",
+            value=candidate_summary['directorate'],
+            delta=candidate_summary['grade'],
+            delta_color="off"
+        )
+
+        st.markdown("---")
+        
+        col_tv1, col_tv2 = st.columns(2)
+        
+        with col_tv1:
+            st.success(f"""
+            **Kekuatan TV Teratas:**
+            - **{best_tv['tv_name']}** (dari {best_tv['tgv_name']})
+            - Skor Kecocokan: **{best_tv['tv_match_rate']:.2f}%**
+            """)
+
+        with col_tv2:
+            st.warning(f"""
+            **Kesenjangan TV Terbesar:**
+            - **{worst_tv['tv_name']}** (dari {worst_tv['tgv_name']})
+            - Skor Kecocokan: **{worst_tv['tv_match_rate']:.2f}%**
+            """)
+
+    except Exception as e:
+        st.error(f"Gagal membuat ringkasan wawasan: {e}")
 
 
 # --- Sidebar Input Form ---
@@ -316,15 +458,11 @@ st.sidebar.header("🔍 Konfigurasi Pencocokan")
 conn = init_connection()
 df_employees = get_employee_list(conn)
 
-# Inisialisasi session state untuk AI Profile
-if 'generated_profile' not in st.session_state:
-    st.session_state['generated_profile'] = None
-
 # 1. Input Metadata Lowongan
 job_vacancy_id = st.sidebar.text_input("Job Vacancy ID (Optional)", placeholder="E.g., DV-2025-01")
-role_name = st.sidebar.text_input("Role Name", placeholder="Data Analyst ", key="role_name_input") 
-job_level = st.sidebar.selectbox("Job Level / Grade", ["I", "II", "III", "IV", "V", "VI"], index=0, key="job_level_input") 
-role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", placeholder="Menyediakan wawasan data yang memimpin keputusan strategis dan mengelola dashboard kinerja.", key="role_purpose_input") 
+role_name = st.sidebar.text_input("Role Name", value="Data Analyst L5", key="role_name_input") 
+job_level = st.sidebar.selectbox("Job Level / Grade", ["I", "II", "III", "IV", "V", "VI"], index=4, key="job_level_input") 
+role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", value="Menyediakan wawasan data yang memimpin keputusan strategis dan mengelola dashboard kinerja.", key="role_purpose_input") 
 
 # 2. Input Benchmark Talenta
 st.sidebar.markdown("---")
@@ -362,9 +500,7 @@ if not is_weights_valid:
 run_button = st.sidebar.button("🚀 Jalankan Pencocokan Talenta", disabled=not conn or not selected_talent_ids or not is_weights_valid)
 
 # --- Area Tampilan Hasil ---
-results_df = pd.DataFrame()
 
-# Jalankan query jika tombol ditekan dan koneksi/input valid
 if run_button:
     if not conn:
         st.error("Koneksi database gagal. Harap periksa `secrets.toml` Anda.")
@@ -374,10 +510,15 @@ if run_button:
          st.sidebar.error("Konfigurasi bobot tidak valid. Harap periksa input Anda.")
     else:
         with st.spinner(f"Menjalankan SQL Talent Match untuk {st.session_state['role_name_input']}..."):
-            results_df = run_talent_match_query(conn, selected_talent_ids, weights_config) 
+            # (BARU) Simpan hasil ke session state
+            st.session_state.results_df = run_talent_match_query(conn, selected_talent_ids, weights_config)
+            # (BARU) Reset pilihan kandidat detail saat query baru dijalankan
+            if "selected_candidate_detail" in st.session_state:
+                st.session_state.selected_candidate_detail = None 
 
-# Tampilkan hasil jika dataframe tidak kosong
-if not results_df.empty:
+if not st.session_state.results_df.empty:
+    
+    results_df = st.session_state.results_df
     
     # Dapatkan ringkasan unik per karyawan
     summary_df = results_df.drop_duplicates(subset=['employee_id']).copy()
@@ -413,7 +554,6 @@ if not results_df.empty:
     # 1. Tampilkan Ringkasan & Tabel Peringkat
     st.header(f"🏆 Peringkat {len(summary_df)} Kandidat untuk {st.session_state['role_name_input']}")
     
-    # PERBAIKAN: Menghapus .background_gradient() untuk menghindari error matplotlib
     st.dataframe(
         summary_df[summary_cols].head(10).style.format({
             'final_match_rate': '{:.2f}%',
@@ -428,27 +568,38 @@ if not results_df.empty:
     # 2. Visualisasi Detail
     st.header("📊 Detail Analisis TGV dan TV")
 
-    # Dapatkan ID kandidat yang tersedia untuk pilihan
+    # Logika selectbox untuk persistensi
     unique_candidates = summary_df['employee_id'].unique()
     candidate_labels = {}
     if not df_employees.empty:
          candidate_labels = df_employees[df_employees['employee_id'].isin(unique_candidates)]\
             .set_index('employee_id')['label'].to_dict()
 
-    # Default ke kandidat peringkat 1
-    top_candidate_id = summary_df.iloc[0]['employee_id']
-    default_candidate_label = candidate_labels.get(top_candidate_id, top_candidate_id)
+    current_options = [candidate_labels.get(eid, eid) for eid in unique_candidates]
+    state_key = "selected_candidate_detail"
+
+    # Set default jika state belum ada 
+    if state_key not in st.session_state or st.session_state[state_key] is None or st.session_state[state_key] not in current_options:
+        top_candidate_id = summary_df.iloc[0]['employee_id']
+        st.session_state[state_key] = candidate_labels.get(top_candidate_id, top_candidate_id)
 
     selected_candidate_label = st.selectbox(
         "Pilih Kandidat untuk Perbandingan Detail:",
-        options=[candidate_labels.get(eid, eid) for eid in unique_candidates],
-        index=0 if default_candidate_label not in candidate_labels.values() else list(candidate_labels.values()).index(default_candidate_label)
+        options=current_options,
+        key=state_key 
     )
     
     selected_candidate_id = next((eid for eid, label in candidate_labels.items() if label == selected_candidate_label), 
                                  next((eid for eid in unique_candidates if eid == selected_candidate_label), None))
 
     if selected_candidate_id:
+        
+        generate_candidate_summary(
+            selected_candidate_id, 
+            selected_candidate_label.split(' (')[0], 
+            summary_df, 
+            results_df
+        )
         
         col_viz_1, col_viz_2 = st.columns([2, 3]) 
         
@@ -458,23 +609,12 @@ if not results_df.empty:
             st.plotly_chart(fig_radar, use_container_width=True)
 
         with col_viz_2:
-            st.markdown(f"#### Detail Skor TV: {selected_candidate_label.split(' (')[0]}")
-            candidate_data = results_df[results_df['employee_id'] == selected_candidate_id].copy()
+            st.markdown(f"#### Heatmap Skor TV: {selected_candidate_label.split(' (')[0]}")
+            fig_heatmap = create_tv_heatmap(results_df, selected_candidate_id, selected_candidate_label.split(' (')[0])
+            st.plotly_chart(fig_heatmap, use_container_width=True)
             
-            # Tampilkan detail TV yang berkontribusi terhadap TGV
-            detail_cols = ['tgv_name', 'tv_name', 'baseline_score', 'user_score', 'tv_match_rate']
-            cols_to_display = [c for c in detail_cols if c in candidate_data.columns]
-            
-            if 'tv_name' in cols_to_display and 'tv_match_rate' in cols_to_display:
-                st.dataframe(candidate_data[cols_to_display].style.format({
-                    'baseline_score': '{:.2f}',
-                    'user_score': '{:.2f}',
-                    'tv_match_rate': '{:.2f}%'
-                }), height=410, use_container_width=True)
-            else:
-                 st.warning("Kolom detail TV (tv_name, baseline_score, user_score, tv_match_rate) tidak ditemukan dalam hasil query.")
         
-        # (BARU) Visualisasi Kekuatan dan Kesenjangan
+        # Visualisasi Kekuatan dan Kesenjangan
         st.markdown("---")
         st.subheader(f"Analisis Kekuatan & Kesenjangan TV untuk {selected_candidate_label.split(' (')[0]}")
         
@@ -489,26 +629,8 @@ if not results_df.empty:
         else:
             st.warning("Tidak dapat membuat visualisasi Kekuatan/Kesenjangan. Kolom 'tv_match_rate' atau 'tv_name' mungkin hilang dari hasil query.")
 
-        
-        # 3. Ringkasan Insight Otomatis (Menggunakan data teratas)
-        if tgv_cols_map: # Hanya tampilkan jika kolom TGV ada
-            st.markdown("---")
-            st.subheader("💡 Wawasan Kunci")
 
-            top_candidate_row = summary_df.iloc[0]
-            top_tgv = top_candidate_row[list(tgv_cols_map.keys())].idxmax()
-            low_tgv = top_candidate_row[list(tgv_cols_map.keys())].idxmin()
-
-            st.info(f"""
-            Kandidat peringkat 1 adalah **{top_candidate_row['fullname']}** dengan total kecocokan **{top_candidate_row['final_match_rate']:.2f}%**. 
-            Skor TGV terbaiknya ada di **{top_tgv.replace(' Match Rate', '')}** dengan skor {top_candidate_row[top_tgv]:.2f}.
-            Area yang paling perlu dikembangkan (skor TGV terendah) adalah **{low_tgv.replace(' Match Rate', '')}** dengan skor {top_candidate_row[low_tgv]:.2f}.
-            Lihat visualisasi 'Kekuatan & Kesenjangan' di atas untuk detail Talent Variable (TV) spesifik.
-            """)
-     
-
-# Kondisi jika tombol ditekan tapi tidak ada hasil
-elif run_button and results_df.empty:
+elif run_button and st.session_state.results_df.empty:
      st.warning("Tidak ada hasil yang ditemukan. Pastikan koneksi database aktif, dan fungsi SQL 'fn_talent_management' tersedia dengan parameter yang benar, serta ID benchmark memiliki data yang memadai.")
 
 # --- Bagian AI Job Profile Generator ---
@@ -531,7 +653,6 @@ if generate_profile:
                 st.session_state['generated_profile'] = profile_json
             elif isinstance(profile_json, str) and profile_json.startswith("Error:"):
                  st.session_state['generated_profile'] = None 
-                 # Tampilkan error yang spesifik dari fungsi AI
                  st.error(profile_json.replace("Error: ", "")) 
             else:
                  st.session_state['generated_profile'] = None 
@@ -576,12 +697,11 @@ if st.session_state.get('generated_profile'):
             st.info("Tidak ada data keterampilan.")
     
     st.markdown("---")
-    # Tambahkan tombol untuk menghapus/membersihkan hasil
     if st.button("Bersihkan Draf Profil", key="clear_ai_button"):
         st.session_state['generated_profile'] = None
         st.rerun() 
 
 # --- Footer ---
 st.sidebar.markdown("---")
-st.sidebar.caption("Talent Match App v3.1 | OpenRouter Llama 3.1")
+st.sidebar.caption("Talent Match App v3.3 | OpenRouter Llama 3.1")
 
