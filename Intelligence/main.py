@@ -113,7 +113,6 @@ def get_employee_list(_conn):
         st.error(f"Error fetching employee list: {e}")
         return pd.DataFrame({'employee_id': [], 'label': []})
 
-# --- KOREKSI INI: Tambahkan cache dan underscore pada koneksi ---
 @st.cache_data
 def run_talent_match_query(_conn, bench_ids, weights):
     """
