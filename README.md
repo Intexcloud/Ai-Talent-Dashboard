@@ -113,6 +113,6 @@ Berikut adalah beberapa tangkapan layar dari aplikasi dashboard akhir:
     ![Visualisasi](Screenshots/Output2.png)
     ![Visualisasi](Screenshots/Output3.png)
 
-  * Analisa Detail Kandidat (Contoh Radar Chart):
+  * Analisa Kesenjangan Kandidat:
     ![Detail Kandidat](Screenshots/Output4.png)
 
