@@ -703,5 +703,5 @@ if st.session_state.get('generated_profile'):
 
 # --- Footer ---
 st.sidebar.markdown("---")
-st.sidebar.caption("Talent Match App v3.3 | OpenRouter Llama 3.1")
+st.sidebar.caption("Talent Match App v1.0 | OpenRouter Llama 3.1")
 
