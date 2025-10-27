@@ -82,10 +82,6 @@ def call_llm_api(prompt):
 
         response = client.chat.completions.create(
             model=selected_model,
-            messages=[
-                {"role": "system", "content": "You are a helpful HR assistant specializing in creating job profiles based on data."},
-                {"role": "user", "content": prompt}
-            ],
             max_tokens=1000,
             temperature=0.7,
         )
@@ -377,10 +373,10 @@ if conn:
                         # Tentukan batas maksimal
                         MAX_HEATMAP_CAP = 100.0
 
-                        # Buat DataFrame untuk WARNA (dipotong)
+                        # Buat DataFrame untuk WARNA 
                         heatmap_pivot_color = heatmap_pivot_final.clip(upper=MAX_HEATMAP_CAP)
 
-                        # Buat DataFrame untuk TEKS (dipotong dan diformat)
+                        # Buat DataFrame untuk TEKS 
                         text_labels = heatmap_pivot_final.applymap(
                             lambda x: f'{min(x, MAX_HEATMAP_CAP):.0f}' if pd.notnull(x) else ''
                         )
@@ -398,7 +394,7 @@ if conn:
 
                         # Tambahkan TEKS yang sudah kita siapkan secara manual
                         fig_heatmap.update_traces(
-                            text=text_labels, # <-- Data untuk TEKS (sudah dipotong & diformat)
+                            text=text_labels, 
                             texttemplate="%{text}"
                         )
                         
