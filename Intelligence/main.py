@@ -36,7 +36,7 @@ def check_secrets_key(key_path, description):
             # Jika 'current' bukan dict/object yang bisa di 'get', berarti key tidak ada
             return None
         if current is None:
-             st.error(f"Error: Kunci '{key_path}' ({description}) tidak ditemukan di Streamlit Secrets.")
+            st.error(f"Error: Kunci '{key_path}' ({description}) tidak ditemukan di Streamlit Secrets.")
             return None
     return current
 
@@ -103,7 +103,7 @@ def generate_job_profile_ai(role, level, purpose):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            response_format={"type": "json_object"}, # Memaksa output JSON
+            response_format={"type": "json_object"}, 
             max_tokens=2048,
             temperature=0.7,
         )
