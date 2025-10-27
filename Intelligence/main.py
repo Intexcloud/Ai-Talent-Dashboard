@@ -22,8 +22,6 @@ if 'generated_profile' not in st.session_state:
 if 'selected_candidate_detail' not in st.session_state:
     st.session_state['selected_candidate_detail'] = None
 
-# --- Dihapus: Variabel Global Gemini API ---
-
 # --- Fungsi Utility Pengecekan Secrets ---
 def check_secrets_key(key_path, description):
     """Memeriksa keberadaan key di st.secrets dan menampilkan error jika hilang."""
@@ -33,7 +31,6 @@ def check_secrets_key(key_path, description):
         if hasattr(current, 'get'):
             current = current.get(key)
         else:
-            # Jika 'current' bukan dict/object yang bisa di 'get', berarti key tidak ada
             return None
         if current is None:
             st.error(f"Error: Kunci '{key_path}' ({description}) tidak ditemukan di Streamlit Secrets.")
@@ -98,7 +95,7 @@ def generate_job_profile_ai(role, level, purpose):
 
         # 3. Panggilan API
         completion = client.chat.completions.create(
-            model="meta-llama/llama-3.1-70b-instruct:free",
+            model="meta-llama/llama-3.3-70b-instruct:free",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -703,5 +700,5 @@ if st.session_state.get('generated_profile'):
 
 # --- Footer ---
 st.sidebar.markdown("---")
-st.sidebar.caption("Talent Match App v1.0 | OpenRouter Llama 3.1")
+st.sidebar.caption("Talent Match App v1.0 | OpenRouter Llama 3.3")
 
