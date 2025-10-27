@@ -77,7 +77,7 @@ def call_llm_api(prompt):
             base_url="https://openrouter.ai/api/v1", 
             api_key=st.secrets["openrouter"]["api_key"], 
         )
-        selected_model = "meta-llama/llama-3.3-8b-instruct:free" 
+        selected_model = "deepseek/deepseek-chat-v3.1:free" 
         st.info(f"Melakukan Fetching pada Openrouter")
 
         response = client.chat.completions.create(
