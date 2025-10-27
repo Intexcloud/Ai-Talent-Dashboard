@@ -10,6 +10,52 @@ st.set_page_config(layout="wide", page_title="AI Talent Match Intelligence")
 st.title("🚀 AI Talent Match Intelligence Dashboard")
 st.markdown("Menemukan kandidat internal terbaik berdasarkan profil benchmark.")
 
+# --- Fungsi Ai Generated Profile ---
+@st.cache_data(show_spinner=False) 
+def generate_job_profile_ai(role, level, purpose):
+    """
+    Menghasilkan draf profil pekerjaan menggunakan Open Router.
+    """
+    try:
+        # 1. Ambil API Key dari Streamlit Secrets
+        api_key = st.secrets.get("api_key")
+        if not api_key:
+            st.error("Google AI API Key (google_api_key) tidak ditemukan di Streamlit Secrets.")
+            st.error("Silakan tambahkan `google_api_key = '...'` ke file `.streamlit/secrets.toml` Anda.")
+            return None
+
+        genai.configure(api_key=api_key)
+
+        # 2. Buat Prompt
+        prompt_template = f"""
+        Anda adalah asisten HR yang ahli dalam membuat draf profil pekerjaan (job profile) internal.
+        Tugas Anda adalah membuat draf profil pekerjaan yang profesional dan menarik berdasarkan informasi berikut:
+
+        - Nama Peran: {role}
+        - Level Pekerjaan / Grade: {level}
+        - Tujuan Peran (Role Purpose): {purpose}
+
+        Harap buat draf yang mencakup bagian-bagian berikut:
+        1.  **Ringkasan Peran** (Perluas 'Tujuan Peran' yang diberikan menjadi paragraf singkat)
+        2.  **Tanggung Jawab Utama** (Buat daftar 5-7 poin penting dalam format bullet points)
+        3.  **Kualifikasi Minimum** (Perkirakan berdasarkan level dan peran, misal: pendidikan, pengalaman)
+        4.  **Keterampilan yang Diutamakan** (Sebutkan 3-5 keterampilan teknis atau soft skills yang relevan)
+
+        Gunakan format Markdown yang jelas dan profesional.
+        """
+
+        # 3. Panggil Model
+        model = genai.GenerativeModel('gemini-pro') 
+        response = model.generate_content(prompt_template)
+
+        # 4. Kembalikan Teks
+        return response.text
+
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat memanggil AI: {e}")
+        st.error("Pastikan API Key Anda valid dan memiliki kuota.")
+        return None
+
 # --- Fungsi Bantu ---
 
 # Cache koneksi database
@@ -36,37 +82,31 @@ def init_connection():
 def get_employee_list(_conn):
     """Mengambil daftar employee_id dan fullname dari database."""
     if _conn is None:
-        return pd.DataFrame({'employee_id': [], 'label': []}) # Return empty dataframe with expected columns
+        return pd.DataFrame({'employee_id': [], 'label': []}) 
     try:
         query = "SELECT employee_id, fullname FROM employees ORDER BY fullname;"
         df = pd.read_sql(query, _conn)
-        # Buat label yang lebih informatif untuk multiselect
         df['label'] = df['fullname'] + " (" + df['employee_id'] + ")"
         return df[['employee_id', 'label']]
     except Exception as e:
         st.error(f"Error fetching employee list: {e}")
-        return pd.DataFrame({'employee_id': [], 'label': []}) # Return empty dataframe with expected columns
+        return pd.DataFrame({'employee_id': [], 'label': []})
 
 def run_talent_match_query(conn, bench_ids, weights):
-    """Menjalankan fungsi SQL fn_talent_management.""" # <-- Nama fungsi diperbarui
+    """Menjalankan fungsi SQL fn_talent_management.""" 
     if not conn or not bench_ids:
         st.warning("Koneksi database gagal atau tidak ada benchmark ID yang dipilih.")
         return pd.DataFrame() 
 
     try:
         weights_json = json.dumps(weights)
-        
-        # MEMANGGIL FUNGSI YANG BENAR: fn_talent_management
         query = "SELECT * FROM fn_talent_management(%s::TEXT[], %s::JSONB);" 
-        
-        df_results = pd.read_sql(query, conn, params=(bench_ids, weights_json))
-        
-        # Mengganti nama kolom output 'o_*' 
+        df_results = pd.read_sql(query, conn, params=(bench_ids, weights_json)
         df_results.columns = [col.replace('o_', '') for col in df_results.columns]
         
         return df_results
     except Exception as e:
-        st.error(f"Error running talent match function (fn_talent_management): {e}") # <-- Nama fungsi diperbarui
+        st.error(f"Error running talent match function (fn_talent_management): {e}") 
         st.error(f"Query parameters: bench_ids={bench_ids}, weights={weights_json}")
         if hasattr(e, 'pgcode'): st.error(f"PostgreSQL Error Code: {e.pgcode}")
         if hasattr(e, 'pgerror'): st.error(f"PostgreSQL Error Message: {e.pgerror}")
@@ -81,7 +121,7 @@ df_employees = get_employee_list(conn)
 # 1. Input Metadata Lowongan
 job_vacancy_id = st.sidebar.text_input("Job Vacancy ID", "VAC-2025-DA-01")
 role_name = st.sidebar.text_input("Role Name", "Data Analyst")
-job_level = st.sidebar.selectbox("Job Level / Grade", ["I", "II", "III", "IV", "V", "VI"], index=3) # Default 'IV'
+job_level = st.sidebar.selectbox("Job Level / Grade", ["I", "II", "III", "IV", "V", "VI"], index=0) 
 role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", "Analyze complex data sets to identify trends, develop insights, and support data-driven decision making.")
 
 # 2. Input Benchmark Talenta
@@ -259,7 +299,12 @@ if not results_df.empty:
         top_score_insight = results_df.iloc[0]['final_match_rate']
         st.markdown(f"Kandidat teratas, **{top_candidate_name_insight}**, mencapai skor **{top_score_insight:.2f}%**. "
                     f"Ini menunjukkan keselarasan yang kuat dengan profil benchmark. Analisis lebih lanjut pada Radar Chart dan Detail Skor TV dapat mengungkapkan area kekuatan dan pengembangan spesifik.")
+     
 
+    # 3. Distribusi Skor 
+    st.subheader("Distribusi Skor Kecocokan (Top 10)")
+    fig_hist = px.histogram(summary_df.head(10), x="final_match_rate", nbins=5, title="Distribusi Final Match Rate (Top 10)")
+    st.plotly_chart(fig_hist)
 
 
 # Kondisi jika tombol ditekan tapi tidak ada hasil
@@ -271,13 +316,15 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("🤖 AI Job Profile Generator")
 generate_profile = st.sidebar.button("Buat Profil Pekerjaan (AI)")
 
-if generate_profile:
-     st.sidebar.markdown("*(Placeholder: Di sini akan ada panggilan ke API LLM)*")
-     # prompt = f"..." 
-     # response = call_llm_api(prompt) 
-     # st.subheader("Draf Profil Pekerjaan (AI)")
-     # st.markdown(response)
-     st.sidebar.success("Fitur AI belum diimplementasikan dalam contoh ini.")
+if 'generated_profile' in st.session_state:
+    st.markdown("---")
+    st.header("🤖 Draf Profil Pekerjaan (Dibuat oleh AI)")
+    st.markdown(st.session_state['generated_profile'])
+    
+    # Tambahkan tombol untuk menghapus/membersihkan hasil
+    if st.button("Bersihkan Draf Profil"):
+        del st.session_state['generated_profile']
+        st.rerun() 
 
 # --- Footer ---
 st.sidebar.markdown("---")
