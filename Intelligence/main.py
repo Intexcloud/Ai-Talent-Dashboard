@@ -22,11 +22,11 @@ def check_secrets_key(key_path, description):
     for key in keys:
         current = current.get(key)
         if current is None:
-            st.error(f"Error: Kunci '{key_path}' ({description}) tidak ditemukan di Streamlit Secrets.")
+            # st.error(f"Error: Kunci '{key_path}' ({description}) tidak ditemukan di Streamlit Secrets.")
             return None
     return current
 
-# --- Fungsi AI Generated Profile ( ---
+# --- Fungsi AI Generated Profile (Menggunakan OpenRouter Llama 3.1) ---
 @st.cache_data(show_spinner=False) 
 def generate_job_profile_ai(role, level, purpose):
     """
@@ -89,7 +89,7 @@ def generate_job_profile_ai(role, level, purpose):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            response_format={"type": "json_object"},
+            response_format={"type": "json_object"}, # Memaksa output JSON
             max_tokens=2048,
             temperature=0.7,
         )
@@ -107,6 +107,7 @@ def generate_job_profile_ai(role, level, purpose):
         st.error("Pastikan API Key OpenRouter Anda valid, memiliki kuota, dan model 'meta-llama/llama-3.1-70b-instruct:free' tersedia.")
         return f"Error: Gagal terhubung ke AI: {e}"
     except json.JSONDecodeError as e:
+        # Ini seharusnya jarang terjadi dengan response_format="json_object"
         st.error(f"Error: AI tidak mengembalikan JSON yang valid: {e}")
         st.error(f"Raw output from AI: {response_text}")
         return "Error: AI tidak mengembalikan JSON yang valid. Coba ulangi."
@@ -183,6 +184,7 @@ def run_talent_match_query(conn, bench_ids, weights):
     
     # 2. Eksekusi Query
     try:
+        # PENTING: diasumsikan fn_talent_management(TEXT[], JSONB) sudah dibuat di Postgres
         query = "SELECT * FROM fn_talent_management(%s::TEXT[], %s::JSONB);" 
         df_results = pd.read_sql(query, conn, params=(bench_ids, weights_json))
         
@@ -252,7 +254,7 @@ def create_radar_chart(df, candidate_id, candidate_name):
 
 def create_strengths_gaps_charts(df, candidate_id):
     """
-    Membuat bar chart horizontal untuk Top 5 Kekuatan dan Kesenjangan TV.
+    (BARU) Membuat bar chart horizontal untuk Top 5 Kekuatan dan Kesenjangan TV.
     """
     candidate_data = df[df['employee_id'] == candidate_id].copy()
     
@@ -297,7 +299,7 @@ def create_strengths_gaps_charts(df, candidate_id):
         title='Top 5 Kesenjangan (Talent Variables)',
         labels={'tv_match_rate': 'Match Rate (%)', 'tv_name': 'Talent Variable'},
         color='tv_match_rate',
-        color_continuous_scale=px.colors.sequential.Reds_r, # Reverse Reds
+        color_continuous_scale=px.colors.sequential.Reds_r, 
         range_color=[0, 50],
         text='tv_match_rate'
     )
@@ -320,9 +322,9 @@ if 'generated_profile' not in st.session_state:
 
 # 1. Input Metadata Lowongan
 job_vacancy_id = st.sidebar.text_input("Job Vacancy ID (Optional)", placeholder="E.g., DV-2025-01")
-role_name = st.sidebar.text_input("Role Name", value="Data Analyst L5", key="role_name_input") 
-job_level = st.sidebar.selectbox("Job Level / Grade", ["I", "II", "III", "IV", "V", "VI"], index=4, key="job_level_input") 
-role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", value="Menyediakan wawasan data yang memimpin keputusan strategis dan mengelola dashboard kinerja.", key="role_purpose_input") 
+role_name = st.sidebar.text_input("Role Name", placeholder="Data Analyst ", key="role_name_input") 
+job_level = st.sidebar.selectbox("Job Level / Grade", ["I", "II", "III", "IV", "V", "VI"], index=0, key="job_level_input") 
+role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", placeholder="Menyediakan wawasan data yang memimpin keputusan strategis dan mengelola dashboard kinerja.", key="role_purpose_input") 
 
 # 2. Input Benchmark Talenta
 st.sidebar.markdown("---")
@@ -411,11 +413,9 @@ if not results_df.empty:
     # 1. Tampilkan Ringkasan & Tabel Peringkat
     st.header(f"🏆 Peringkat {len(summary_df)} Kandidat untuk {st.session_state['role_name_input']}")
     
+    # PERBAIKAN: Menghapus .background_gradient() untuk menghindari error matplotlib
     st.dataframe(
-        summary_df[summary_cols].head(10).style.background_gradient(
-            cmap='Blues', 
-            subset=['final_match_rate']
-        ).format({
+        summary_df[summary_cols].head(10).style.format({
             'final_match_rate': '{:.2f}%',
             **{k: '{:.2f}' for k in tgv_cols_map.keys()}
         }), 
@@ -474,7 +474,7 @@ if not results_df.empty:
             else:
                  st.warning("Kolom detail TV (tv_name, baseline_score, user_score, tv_match_rate) tidak ditemukan dalam hasil query.")
         
-        #  Visualisasi Kekuatan dan Kesenjangan
+        # (BARU) Visualisasi Kekuatan dan Kesenjangan
         st.markdown("---")
         st.subheader(f"Analisis Kekuatan & Kesenjangan TV untuk {selected_candidate_label.split(' (')[0]}")
         
