@@ -25,13 +25,11 @@ def generate_job_profile_ai(role, level, purpose):
 
         client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
-            api_key=api_key_or,
+            api_key=api_key_or, 
         )
 
-        # 2. Buat Prompt (Koreksi: Menggunakan variabel yang benar)
+        # 2. Buat Prompt 
         system_prompt = "Anda adalah asisten HR yang ahli dalam membuat draf profil pekerjaan (job profile) internal. Tugas Anda adalah membuat draf profil pekerjaan yang profesional dan menarik berdasarkan informasi yang diberikan pengguna."
-        
-        # Menggunakan f-string yang sudah ada sebagai user_prompt
         user_prompt_template = f"""
         Buat draf profil pekerjaan yang profesional dan menarik berdasarkan informasi berikut:
 
@@ -134,7 +132,6 @@ def run_talent_match_query(conn, bench_ids, weights):
         
         return df_results
     except Exception as e:
-        # Penanganan error PostgreSQL yang lebih detail
         st.error(f"Error running talent match function (fn_talent_management): {e}") 
         pg_error_message = ""
         if hasattr(e, 'pgcode'): pg_error_message += f"PostgreSQL Error Code: {e.pgcode}. "
@@ -154,17 +151,19 @@ if 'generated_profile' not in st.session_state:
     st.session_state['generated_profile'] = None
 
 # 1. Input Metadata Lowongan
-job_vacancy_id = st.sidebar.text_input("Job Vacancy ID")
-role_name = st.sidebar.text_input("Role Name")
+job_vacancy_id = st.sidebar.text_input("Job Vacancy ID", "VAC-2025-DA-01")
+role_name = st.sidebar.text_input("Role Name", "Data Analyst")
 job_level = st.sidebar.selectbox("Job Level / Grade", ["I", "II", "III", "IV", "V", "VI"], index=0) 
-role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)")
+role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", "Analyze complex data sets to identify trends, develop insights, and support data-driven decision making.")
 
 # 2. Input Benchmark Talenta
 st.sidebar.markdown("---")
 st.sidebar.subheader("🎯 Pilih Benchmark Talenta (Rating 5)")
+# Menggunakan label informatif untuk multiselect
 selected_labels = st.sidebar.multiselect(
     "Pilih Karyawan Benchmark:",
     options=df_employees['label'].tolist(),
+    # Default selection (contoh, ambil 3 ID pertama dari daftar)
     default=df_employees['label'].head(3).tolist() if not df_employees.empty else [] 
 )
 # Ekstrak employee_id dari label yang dipilih
@@ -191,7 +190,7 @@ if weight_input_method == "Sliders":
     else:
         is_weights_valid = True
 
-else:
+else: 
     weights_json_str = st.sidebar.text_area("Masukkan JSON Bobot:", json.dumps(default_weights, indent=2), height=150, key="json_weight_input")
     try:
         weights_config = json.loads(weights_json_str)
@@ -199,6 +198,7 @@ else:
             st.sidebar.error("JSON bobot tidak valid. Pastikan ada key: cognitive, competency, behavioral, contextual.")
             weights_config = {} 
         else:
+             # Cek total bobot
             current_total = sum(weights_config.values())
             st.sidebar.caption(f"Total Bobot Saat Ini: {current_total:.2f}")
             if abs(current_total - 1.0) > 0.01:
@@ -210,6 +210,7 @@ else:
         weights_config = {} 
         is_weights_valid = False
 
+# Tombol untuk menjalankan pencocokan
 run_button = st.sidebar.button("🚀 Jalankan Pencocokan Talenta")
 
 # --- Area Tampilan Hasil ---
@@ -225,8 +226,10 @@ if run_button:
          st.sidebar.error("Konfigurasi bobot tidak valid. Harap periksa input Anda.")
     else:
         with st.spinner("Mencari kandidat terbaik..."):
+            # Memanggil fungsi run_talent_match_query (yang memanggil fn_talent_management)
             results_df = run_talent_match_query(conn, selected_talent_ids, weights_config) 
 
+            # Join dengan nama karyawan (jika belum ada di fungsi SQL)
             if not results_df.empty:
                  if not df_employees.empty and 'fullname' not in results_df.columns:
                     employee_names = df_employees.set_index('employee_id')['label'].str.split(' \(').str[0] 
@@ -242,6 +245,7 @@ if not results_df.empty:
 
     # 1. Tabel Hasil Peringkat Ringkas
     st.subheader("Tabel Peringkat Kandidat (Ringkasan)")
+    # Kolom ringkasan + skor TGV unik per karyawan
     summary_cols = ['employee_id', 'fullname', 'directorate', 'role', 'grade', 'final_match_rate']
     tgv_cols_for_summary = ['tgv_cognitive_match_rate', 'tgv_competency_match_rate', 'tgv_behavioral_match_rate', 'tgv_contextual_match_rate']
     
@@ -249,7 +253,7 @@ if not results_df.empty:
     tgv_scores_unique = results_df.drop_duplicates(subset=['employee_id'])[['employee_id'] + [c for c in tgv_cols_for_summary if c in results_df.columns]]
     if not tgv_scores_unique.empty:
         tgv_scores_unique = tgv_scores_unique.set_index('employee_id')
-        tgv_scores_unique.columns = ['TGV Cognitive', 'TGV Competency', 'TGV Behavioral', 'TGV Contextual']
+        tgv_scores_unique.columns = ['TGV Cognitive', 'TGV Competency', 'TGV Behavioral', 'TGV Contextual'] # Rename TGV columns
     
         # Gabungkan ke tabel ringkasan
         summary_df = results_df.drop_duplicates(subset=['employee_id'])
@@ -279,8 +283,6 @@ if not results_df.empty:
     if not df_employees.empty:
          candidate_labels = df_employees[df_employees['employee_id'].isin(unique_candidates)]\
             .set_index('employee_id')['label'].to_dict()
-
-    # Dapatkan label untuk kandidat teratas sebagai default
     default_candidate_label = candidate_labels.get(results_df.iloc[0]['employee_id'], results_df.iloc[0]['employee_id'])
 
     selected_candidate_label = st.selectbox(
@@ -288,15 +290,16 @@ if not results_df.empty:
         options=[candidate_labels.get(eid, eid) for eid in unique_candidates],
         index=([candidate_labels.get(eid, eid) for eid in unique_candidates].index(default_candidate_label) if default_candidate_label in [candidate_labels.get(eid, eid) for eid in unique_candidates] else 0)
     )
-    selected_candidate_id = next((eid for eid, label in candidate_labels.items() if label == selected_candidate_label), unique_candidates[0] if len(unique_candidates)>0 else None)
+    selected_candidate_id = next((eid for eid, label in candidate_labels.items() if label == selected_candidate_label), unique_candidates[0] if len(unique_candidates)>0 else None) # Default ke ID pertama jika label tidak ditemukan
 
     if selected_candidate_id:
         candidate_data = results_df[results_df['employee_id'] == selected_candidate_id]
         
-        col1, col2 = st.columns([2, 3]) 
+        col1, col2 = st.columns([2, 3])
         
         with col1:
             st.markdown(f"#### Radar Chart: {selected_candidate_label}")
+            # Data untuk Radar Chart (Skor TGV)
             tgv_data_radar = candidate_data.drop_duplicates(subset=['tgv_name'])
             categories = ['Cognitive', 'Competency', 'Behavioral', 'Contextual'] 
             
@@ -310,13 +313,13 @@ if not results_df.empty:
             fig_radar = go.Figure()
             fig_radar.add_trace(go.Scatterpolar(r=candidate_scores_radar, theta=categories, fill='toself', name=f'Kandidat', line=dict(color='blue')))
             fig_radar.add_trace(go.Scatterpolar(r=[100] * len(categories), theta=categories, fill=None, name='Benchmark (100%)', line=dict(color='grey', dash='dash')))
-    
+            
             max_val = max([100] + candidate_scores_radar) * 1.1 
             
             fig_radar.update_layout(
                 polar=dict(radialaxis=dict(visible=True, range=[0, max_val])),
                 showlegend=True, height=400, margin=dict(l=40, r=40, t=50, b=40),
-                legend=dict(yanchor="bottom", y= -0.2, xanchor="center", x=0.5) 
+                legend=dict(yanchor="bottom", y= -0.2, xanchor="center", x=0.5)
             )
             st.plotly_chart(fig_radar, use_container_width=True)
             st.caption("Membandingkan skor TGV kandidat (area biru) dengan skor benchmark ideal (garis putus-putus 100%).")
@@ -382,11 +385,10 @@ if st.session_state['generated_profile']:
     st.header("🤖 Draf Profil Pekerjaan (Dibuat oleh AI)")
     st.markdown(st.session_state['generated_profile'])
     
-    # Tambahkan tombol untuk menghapus/membersihkan hasil
     if st.button("Bersihkan Draf Profil"):
         st.session_state['generated_profile'] = None
         st.rerun() 
 
 # --- Footer ---
 st.sidebar.markdown("---")
-st.sidebar.caption("Talent Match App v1.0")
+st.sidebar.caption("Talent Match App v1.0 (Diperbaiki)")
