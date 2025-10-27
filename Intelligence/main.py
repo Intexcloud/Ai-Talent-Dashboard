@@ -12,7 +12,6 @@ st.title("🚀 AI Talent Match Intelligence Dashboard")
 st.markdown("Menemukan kandidat internal terbaik berdasarkan profil benchmark.")
 
 # --- Inisialisasi Session State ---
-# Menyimpan hasil query agar tidak hilang saat widget berinteraksi
 if 'results_df' not in st.session_state:
     st.session_state.results_df = pd.DataFrame()
 # Menyimpan profil AI
@@ -266,7 +265,7 @@ def create_radar_chart(df, candidate_id, candidate_name):
     )
     return fig
 
-# (BARU) Fungsi Heatmap TV
+# Fungsi Heatmap TV
 def create_tv_heatmap(df, candidate_id, candidate_name):
     """
     (BARU) Membuat Heatmap skor tv_match_rate untuk kandidat yang dipilih.
