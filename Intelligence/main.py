@@ -200,10 +200,8 @@ if run_button and conn:
                  if not df_employees.empty:
                     employee_names = df_employees.set_index('employee_id')['label'].str.split(' \(').str[0] # Ambil nama saja
                     results_df = results_df.join(employee_names.rename('fullname'), on='employee_id')
-                    # Reorder columns if needed
                     if 'fullname' in results_df.columns:
                         cols = ['employee_id', 'fullname'] + [col for col in results_df.columns if col not in ['employee_id', 'fullname']]
-                        # Cek apakah semua kolom ada sebelum reordering
                         if all(c in results_df.columns for c in cols):
                             results_df = results_df[cols]
                         else: 
@@ -218,7 +216,6 @@ if not results_df.empty:
 
     # 1. Tabel Hasil Peringkat Ringkas
     st.subheader("Tabel Peringkat Kandidat (Ringkasan)")
-    # Kolom ringkasan + skor TGV unik per karyawan
     summary_cols = ['employee_id', 'fullname', 'directorate', 'role', 'grade', 'final_match_rate']
     tgv_cols_for_summary = ['tgv_cognitive_match_rate', 'tgv_competency_match_rate', 'tgv_behavioral_match_rate', 'tgv_contextual_match_rate']
     
@@ -259,7 +256,6 @@ if not results_df.empty:
         "Pilih Kandidat untuk Detail:",
         options=[candidate_labels.get(eid, eid) for eid in unique_candidates] 
     )
-    # Dapatkan employee_id dari label yang dipilih
     selected_candidate_id = next((eid for eid, label in candidate_labels.items() if label == selected_candidate_label), unique_candidates[0] if len(unique_candidates)>0 else None) # Default ke ID pertama jika label tidak ditemukan
 
     if selected_candidate_id:
@@ -269,7 +265,6 @@ if not results_df.empty:
         
         with col1:
             st.markdown(f"#### Radar Chart: {selected_candidate_label}")
-            # Data untuk Radar Chart (Skor TGV)
             tgv_data_radar = candidate_data.drop_duplicates(subset=['tgv_name'])
             categories = ['Cognitive', 'Competency', 'Behavioral', 'Contextual'] 
             
@@ -283,12 +278,12 @@ if not results_df.empty:
             fig_radar.add_trace(go.Scatterpolar(r=[100] * len(categories), theta=categories, fill=None, name='Benchmark (100%)', line=dict(color='grey', dash='dash')))
             
             # Cari nilai max untuk range, pastikan minimal 100
-            max_val = max([100] + candidate_scores_radar) * 1.1 # Tambah buffer 10%
+            max_val = max([100] + candidate_scores_radar) * 1.1 
             
             fig_radar.update_layout(
                 polar=dict(radialaxis=dict(visible=True, range=[0, max_val])),
                 showlegend=True, height=400, margin=dict(l=40, r=40, t=50, b=40),
-                legend=dict(yanchor="bottom", y= -0.2, xanchor="center", x=0.5) # Posisi legenda
+                legend=dict(yanchor="bottom", y= -0.2, xanchor="center", x=0.5) 
             )
             st.plotly_chart(fig_radar, use_container_width=True)
             st.caption("Membandingkan skor TGV kandidat (area biru) dengan skor benchmark ideal (garis putus-putus 100%).")
