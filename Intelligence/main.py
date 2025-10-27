@@ -4,6 +4,7 @@ import psycopg2
 import json
 import plotly.graph_objects as go
 import plotly.express as px
+from openai import OpenAI
 
 # --- Konfigurasi Halaman & Judul ---
 st.set_page_config(layout="wide", page_title="AI Talent Match Intelligence")
@@ -14,17 +15,20 @@ st.markdown("Menemukan kandidat internal terbaik berdasarkan profil benchmark.")
 @st.cache_data(show_spinner=False) 
 def generate_job_profile_ai(role, level, purpose):
     """
-    Menghasilkan draf profil pekerjaan menggunakan Open Router.
+    Menghasilkan draf profil pekerjaan menggunakan AI.
     """
     try:
         # 1. Ambil API Key dari Streamlit Secrets
-        api_key = st.secrets.get("api_key")
+        api_key = st.secrets.get("openrouter_api_key")
         if not api_key:
-            st.error("Google AI API Key (google_api_key) tidak ditemukan di Streamlit Secrets.")
-            st.error("Silakan tambahkan `google_api_key = '...'` ke file `.streamlit/secrets.toml` Anda.")
+            st.error("OpenRouter API Key (openrouter_api_key) tidak ditemukan di Streamlit Secrets.")
+            st.error("Silakan tambahkan `openrouter_api_key = '...'` ke file `.streamlit/secrets.toml` Anda.")
             return None
 
-        genai.configure(api_key=api_key)
+        client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=api_key,
+        )
 
         # 2. Buat Prompt
         prompt_template = f"""
@@ -45,11 +49,17 @@ def generate_job_profile_ai(role, level, purpose):
         """
 
         # 3. Panggil Model
-        model = genai.GenerativeModel('gemini-pro') 
-        response = model.generate_content(prompt_template)
+        completion = client.chat.completions.create(
+            model="tngtech/deepseek-r1t2-chimera:free", 
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0.7,
+        )
 
         # 4. Kembalikan Teks
-        return response.text
+        return completion.choices[0].message.content
 
     except Exception as e:
         st.error(f"Terjadi kesalahan saat memanggil AI: {e}")
@@ -63,7 +73,7 @@ def generate_job_profile_ai(role, level, purpose):
 def init_connection():
     """Menginisialisasi koneksi ke database PostgreSQL."""
     try:
-        # GANTI DENGAN DETAIL KONEKSI ANDA (Gunakan Streamlit Secrets)
+        # Koneksia Database
         conn = psycopg2.connect(
             host=st.secrets["postgres"]["host"],
             database=st.secrets["postgres"]["dbname"],
@@ -101,7 +111,7 @@ def run_talent_match_query(conn, bench_ids, weights):
     try:
         weights_json = json.dumps(weights)
         query = "SELECT * FROM fn_talent_management(%s::TEXT[], %s::JSONB);" 
-        df_results = pd.read_sql(query, conn, params=(bench_ids, weights_json)
+        df_results = pd.read_sql(query, conn, params=(bench_ids, weights_json))
         df_results.columns = [col.replace('o_', '') for col in df_results.columns]
         
         return df_results
@@ -218,6 +228,7 @@ if not results_df.empty:
 
     # Gabungkan ke tabel ringkasan
     summary_df = results_df.drop_duplicates(subset=['employee_id'])
+    
     # Hanya pilih kolom yang ada di summary_df sebelum join
     cols_to_select = [col for col in summary_cols if col in summary_df.columns]
     summary_df = summary_df[cols_to_select]
@@ -289,7 +300,7 @@ if not results_df.empty:
                  'baseline_score': '{:.2f}',
                  'user_score': '{:.2f}',
                  'tv_match_rate': '{:.2f}%'
-            }), height=410) # Sesuaikan tinggi tabel
+            }), height=410)
             
         st.markdown("---")
 
