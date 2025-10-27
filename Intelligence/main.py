@@ -656,7 +656,7 @@ if generate_profile:
 # Tampilkan Profil AI jika sudah ada di session state
 if st.session_state.get('generated_profile'):
     st.markdown("---")
-    st.header(f"🤖 Draf Profil Pekerjaan untuk {st.session_state['role_name_input']} (Dibuat oleh AI)")
+    st.header(f" Draf Profil Pekerjaan untuk {st.session_state['role_name_input']} (Dibuat oleh AI)")
     
     profile = st.session_state['generated_profile']
     
