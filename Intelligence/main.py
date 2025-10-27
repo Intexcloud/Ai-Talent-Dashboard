@@ -255,6 +255,8 @@ if not results_df.empty:
     
     # Ambil skor TGV unik
     tgv_scores_unique = results_df.drop_duplicates(subset=['employee_id'])[['employee_id'] + [c for c in tgv_cols_for_summary if c in results_df.columns]]
+    required_tgv_cols = [c for c in tgv_cols_for_summary if c in tgv_scores_unique.columns]
+    
     if not tgv_scores_unique.empty:
         tgv_scores_unique = tgv_scores_unique.set_index('employee_id')
         tgv_scores_unique.columns = ['TGV Cognitive', 'TGV Competency', 'TGV Behavioral', 'TGV Contextual']
