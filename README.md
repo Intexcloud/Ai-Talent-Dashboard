@@ -114,5 +114,5 @@ Berikut adalah beberapa tangkapan layar dari aplikasi dashboard akhir:
     ![Visualisasi](Screenshots/Output3.png)
 
   * Analisa Detail Kandidat (Contoh Radar Chart):
-    ![Detail Kandidat](Screenshots/Dashboard4.png)
+    ![Detail Kandidat](Screenshots/Output4.png)
 
