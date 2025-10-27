@@ -460,9 +460,9 @@ df_employees = get_employee_list(conn)
 
 # 1. Input Metadata Lowongan
 job_vacancy_id = st.sidebar.text_input("Job Vacancy ID (Optional)", placeholder="E.g., DV-2025-01")
-role_name = st.sidebar.text_input("Role Name", value="Data Analyst L5", key="role_name_input") 
-job_level = st.sidebar.selectbox("Job Level / Grade", ["I", "II", "III", "IV", "V", "VI"], index=4, key="job_level_input") 
-role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", value="Menyediakan wawasan data yang memimpin keputusan strategis dan mengelola dashboard kinerja.", key="role_purpose_input") 
+role_name = st.sidebar.text_input("Role Name", placeholder=" E.g. Data Analyst", key="role_name_input") 
+job_level = st.sidebar.selectbox("Job Level / Grade", ["I", "II", "III", "IV", "V", "VI"], index=0, key="job_level_input") 
+role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", placeholder=" E.g. Menyediakan wawasan data yang memimpin keputusan strategis dan mengelola dashboard kinerja.", key="role_purpose_input") 
 
 # 2. Input Benchmark Talenta
 st.sidebar.markdown("---")
