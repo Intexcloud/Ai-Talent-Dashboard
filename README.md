@@ -1,7 +1,7 @@
 # Case Study: Sistem Intelijen Pencocokan Talenta (Talent Match Intelligence System) 
 **Repositori ini berisi solusi lengkap untuk Studi Kasus Data Analyst 2025, yang berfokus pada perancangan dan implementasi sistem Talent Match Intelligence dari awal hingga akhir.**
 
-**Tautan Aplikasi yang Telah Di-deploy:** 
+Tautan Aplikasi yang Telah Di-deploy: https://ai-talent-dashboard.streamlit.app/
 
 ## 1. Latar Belakang Proyek
 Proyek ini menyimulasikan alur kerja analisis data di Perusahaan X untuk membangun sebuah Talent Match Intelligence system. Tujuannya adalah untuk membantu para pemimpin bisnis membuat keputusan suksesi yang lebih baik dengan:
