@@ -83,7 +83,8 @@ def init_connection():
             database=st.secrets["postgres"]["dbname"],
             user=st.secrets["postgres"]["user"],
             password=st.secrets["postgres"]["password"],
-            port=st.secrets["postgres"]["port"]
+            port=st.secrets["postgres"]["port"],
+            options="-c client_encoding=utf8"
         )
         return conn
     except Exception as e:
@@ -151,10 +152,10 @@ if 'generated_profile' not in st.session_state:
     st.session_state['generated_profile'] = None
 
 # 1. Input Metadata Lowongan
-job_vacancy_id = st.sidebar.text_input("Job Vacancy ID", "VAC-2025-DA-01")
-role_name = st.sidebar.text_input("Role Name", "Data Analyst")
+job_vacancy_id = st.sidebar.text_input("Job Vacancy ID")
+role_name = st.sidebar.text_input("Role Name")
 job_level = st.sidebar.selectbox("Job Level / Grade", ["I", "II", "III", "IV", "V", "VI"], index=0) 
-role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", "Analyze complex data sets to identify trends, develop insights, and support data-driven decision making.")
+role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)")
 
 # 2. Input Benchmark Talenta
 st.sidebar.markdown("---")
