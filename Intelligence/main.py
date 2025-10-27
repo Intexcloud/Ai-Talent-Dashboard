@@ -27,12 +27,13 @@ def generate_job_profile_ai(role, level, purpose):
 
         client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
-            api_key=st.secrets["openrouter"]["api_key"],
+            api_key=st.secrets["openrouter_api_key"],
         )
 
         # 2. Buat Prompt
-        prompt_template = f"""
-        Anda adalah asisten HR yang ahli dalam membuat draf profil pekerjaan (job profile) internal.
+        system_role_instruction = "Anda adalah asisten HR yang ahli dalam membuat draf profil pekerjaan (job profile) internal."
+        
+        user_prompt_content = f"""
         Tugas Anda adalah membuat draf profil pekerjaan yang profesional dan menarik berdasarkan informasi berikut:
 
         - Nama Peran: {role}
@@ -46,14 +47,13 @@ def generate_job_profile_ai(role, level, purpose):
         4.  **Keterampilan yang Diutamakan** (Sebutkan 3-5 keterampilan teknis atau soft skills yang relevan)
 
         Gunakan format Markdown yang jelas dan profesional.
-        """
+        """ # Gunakan ini sebagai content dari role 'user'
 
         # 3. Panggil Model
         completion = client.chat.completions.create(
             model="deepseek/deepseek-chat-v3.1:free", 
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
+                {"role": "system", "content": system_role_instruction},
             ],
             max_tokens=1000,
             temperature=0.7,
@@ -66,7 +66,7 @@ def generate_job_profile_ai(role, level, purpose):
         st.error(f"Terjadi kesalahan saat memanggil AI: {e}")
         st.error("Pastikan API Key Anda valid dan memiliki kuota.")
         return None
-
+        
 # --- Fungsi Bantu ---
 
 # Cache koneksi database
@@ -74,7 +74,7 @@ def generate_job_profile_ai(role, level, purpose):
 def init_connection():
     """Menginisialisasi koneksi ke database PostgreSQL."""
     try:
-        # GANTI DENGAN DETAIL KONEKSI ANDA (Gunakan Streamlit Secrets)
+        # GANTI DENGAN DETAIL KONEKSI ANDA 
         conn = psycopg2.connect(
             host=st.secrets["postgres"]["host"],
             database=st.secrets["postgres"]["dbname"],
