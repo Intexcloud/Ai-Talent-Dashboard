@@ -94,7 +94,7 @@ def generate_job_profile_ai(role, level, purpose):
 
         # 3. Panggilan API
         completion = client.chat.completions.create(
-            model="minimax/minimax-m2:free",
+            model="openai/gpt-oss-20b:free",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
