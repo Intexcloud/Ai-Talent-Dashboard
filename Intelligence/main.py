@@ -94,7 +94,7 @@ def generate_job_profile_ai(role, level, purpose):
 
         # 3. Panggilan API
         completion = client.chat.completions.create(
-            model="meta-llama/llama-3.3-70b-instruct:free",
+            model="minimax/minimax-m2:free",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -699,5 +699,5 @@ if st.session_state.get('generated_profile'):
 
 # --- Footer ---
 st.sidebar.markdown("---")
-st.sidebar.caption("Talent Match App v1.0 | OpenRouter Llama 3.3")
+st.sidebar.caption("Talent Match App v1.0 ")
 
