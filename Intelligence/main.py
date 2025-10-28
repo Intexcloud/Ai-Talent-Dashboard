@@ -642,7 +642,7 @@ if generate_profile:
     if not role or not purpose:
          st.sidebar.error("Nama peran dan Tujuan Peran tidak boleh kosong.")
     else:
-        with st.spinner("Membuat draf profil pekerjaan dengan AI (Llama 3.1)..."):
+        with st.spinner("Membuat draf profil pekerjaan dengan AI..."):
             profile_json = generate_job_profile_ai(role, level, purpose)
             
             if isinstance(profile_json, dict):
