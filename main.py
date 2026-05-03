@@ -458,13 +458,13 @@ df_employees = get_employee_list(conn)
 job_vacancy_id = st.sidebar.text_input("Job Vacancy ID (Optional)", placeholder="E.g., DV-2025-01")
 role_name = st.sidebar.text_input("Role Name", placeholder=" E.g. Data Analyst", key="role_name_input") 
 job_level = st.sidebar.selectbox("Job Level / Grade", ["I", "II", "III", "IV", "V", "VI"], index=0, key="job_level_input") 
-role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", placeholder=" E.g. Menyediakan wawasan data yang memimpin keputusan strategis dan mengelola dashboard kinerja.", key="role_purpose_input") 
+role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", placeholder=" E.x. Provide data insights that lead strategic decisions and manage performance dashboards.", key="role_purpose_input") 
 
 # 2. Input Benchmark Talenta
 st.sidebar.markdown("---")
 st.sidebar.subheader("🎯 Choose Talent Benchmark (Rating 5)")
 selected_labels = st.sidebar.multiselect(
-    "Pilih Karyawan Benchmark:",
+    "Select Benchmark Employees:",
     options=df_employees['label'].tolist(),
     default=df_employees['label'].head(3).tolist() if not df_employees.empty else [],
     max_selections=3
@@ -493,7 +493,7 @@ is_weights_valid = abs(current_total - 1.0) < 0.01
 if not is_weights_valid:
     st.sidebar.error("The total weight should be close to 1.0.")
 
-run_button = st.sidebar.button("🚀 Jalankan Pencocokan Talenta", disabled=not conn or not selected_talent_ids or not is_weights_valid)
+run_button = st.sidebar.button("🚀 Run Talent Matching", disabled=not conn or not selected_talent_ids or not is_weights_valid)
 
 # --- Area Tampilan Hasil ---
 
