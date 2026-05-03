@@ -9,7 +9,7 @@ from openai import OpenAI
 # --- Konfigurasi Halaman & Judul ---
 st.set_page_config(layout="wide", page_title="AI Talent Match Intelligence")
 st.title("🚀 AI Talent Match Intelligence Dashboard")
-st.markdown("Menemukan kandidat internal terbaik berdasarkan profil benchmark.")
+st.markdown("Find the best internal candidates based on benchmark profiles.")
 
 # --- Inisialisasi Session State ---
 if 'results_df' not in st.session_state:
@@ -23,7 +23,7 @@ if 'selected_candidate_detail' not in st.session_state:
 
 # --- Fungsi Utility Pengecekan Secrets ---
 def check_secrets_key(key_path, description):
-    """Memeriksa keberadaan key di st.secrets dan menampilkan error jika hilang."""
+    """Checks for the existence of a key in st.secrets and displays an error if it is missing."""
     keys = key_path.split('.')
     current = st.secrets
     for key in keys:
@@ -32,7 +32,7 @@ def check_secrets_key(key_path, description):
         else:
             return None
         if current is None:
-            st.error(f"Error: Kunci '{key_path}' ({description}) tidak ditemukan di Streamlit Secrets.")
+            st.error(f"Error: Kunci '{key_path}' ({description}) not found in Streamlit Secrets.")
             return None
     return current
 
@@ -40,17 +40,17 @@ def check_secrets_key(key_path, description):
 @st.cache_data(show_spinner=False) 
 def generate_job_profile_ai(role, level, purpose):
     """
-    Menghasilkan draf profil pekerjaan terstruktur menggunakan OpenRouter (Llama 3.1).
-    Meminta output JSON secara eksplisit.
+    Generate a draft structured job profile using OpenRouter (Llama 3.1).
+    Explicitly request JSON output.
     """
     if not role or not purpose:
-         return "Error: Nama Peran dan Tujuan Peran harus diisi untuk membuat profil AI."
+         return "Error:Role Name and Role Purpose must be filled in to create an AI profile."
 
     # 1. Ambil API Key dari Streamlit Secrets
     api_key_or = check_secrets_key("openrouter.api_key", "OpenRouter API Key")
     if not api_key_or:
         st.error("Error: Kunci 'openrouter.api_key' tidak ditemukan di Streamlit Secrets.")
-        return "Error: OpenRouter API Key tidak ditemukan."
+        return "Error: OpenRouter API Key not Found."
 
     try:
         client = OpenAI(
@@ -59,36 +59,36 @@ def generate_job_profile_ai(role, level, purpose):
         )
 
         # 2. Definisikan Prompt
-        system_prompt = """Anda adalah spesialis HR terkemuka yang ahli dalam membuat draf profil pekerjaan yang komprehensif. 
-        Tugas Anda adalah menghasilkan output HANYA dalam format JSON yang valid, berdasarkan permintaan pengguna.
-        Pastikan JSON yang Anda hasilkan ketat (strict) dan tidak ada teks lain di luar blok JSON."""
+        system_prompt = """You are a leading HR specialist skilled at drafting comprehensive job profiles.
+        Your job is to generate output in ONLY valid JSON format, based on user requests.
+        Ensure the JSON you generate is strict and contains no other text outside the JSON block."""
         
         user_prompt = f"""
-        Buat draf profil pekerjaan dalam Bahasa Indonesia untuk peran: '{role}' dengan level '{level}'. 
-        Tujuan peran (role purpose) utama adalah: '{purpose}'. 
+        Create a draft job profile in English for the role:'{role}' with levels '{level}'. 
+        The main role purpose is: '{purpose}'. 
         
-        Harap hasilkan JSON dengan struktur berikut:
+        Please generate JSON with the following structure:
         {{
-          "summary": "Ringkasan Peran yang menarik (1-2 kalimat).",
-          "responsibilities": [
-            "Tanggung jawab utama 1",
-            "Tanggung jawab utama 2",
-            "Tanggung jawab utama 3",
-            "Tanggung jawab utama 4",
-            "Tanggung jawab utama 5"
-          ],
-          "qualifications": [
-            "Kualifikasi minimum 1 (misal: S1 di bidang terkait)",
-            "Kualifikasi minimum 2 (misal: 3+ tahun pengalaman)",
-            "Kualifikasi minimum 3"
-          ],
-          "skills": [
-            "Keterampilan teknis/soft skill 1",
-            "Keterampilan teknis/soft skill 2",
-            "Keterampilan teknis/soft skill 3",
-            "Keterampilan teknis/soft skill 4",
-            "Keterampilan teknis/soft skill 5"
-          ]
+        "summary": "A compelling role summary (1-2 sentences)",
+        "responsibilities": [
+        "Key responsibility 1",
+        "Key responsibility 2",
+        "Key responsibility 3",
+        "Key responsibility 4",
+        "Key responsibility 5"
+        ],
+        "qualifications": [
+        "Minimum qualification 1 (e.g., Bachelor's degree in a related field)",
+        "Minimum qualification 2 (e.g., 3+ years of experience)",
+        "Minimum qualification 3"
+        ],
+        "skills": [
+        "Technical skill/soft skill 1",
+        "Technical skill/soft skill 2",
+        "Technical skill/soft skill 3",
+        "Technical skill/soft skill 4",
+        "Technical skill/soft skill 5"
+        ]
         }}
         """
 
@@ -108,19 +108,19 @@ def generate_job_profile_ai(role, level, purpose):
         response_text = completion.choices[0].message.content
         
         if not response_text:
-            return "Error: AI mengembalikan respons kosong."
+            return "Error: AI returned an empty response."
 
         return json.loads(response_text)
 
     except Exception as e:
-        st.error(f"Error memanggil OpenRouter API: {e}")
-        st.error("Pastikan API Key OpenRouter Anda valid, memiliki kuota, dan model 'meta-llama/llama-3.1-70b-instruct:free' tersedia.")
-        return f"Error: Gagal terhubung ke AI: {e}"
+        st.error(f"Error calling OpenRouter API:{e}")
+        st.error("Make sure your OpenRouter API Key is valid, has quota, and the model 'meta-llama/llama-3.1-70b-instruct:free' is available.")
+        return f"Error: Failed to connect to AI: {e}"
     except json.JSONDecodeError as e:
         # Ini seharusnya jarang terjadi dengan response_format="json_object"
-        st.error(f"Error: AI tidak mengembalikan JSON yang valid: {e}")
+        st.error(f"Error: AI did not return valid JSON: {e}")
         st.error(f"Raw output from AI: {response_text}")
-        return "Error: AI tidak mengembalikan JSON yang valid. Coba ulangi."
+        return "Error: AI did not return valid JSON. Try again."
 
 
 # --- Fungsi Bantu Database ---
@@ -128,7 +128,7 @@ def generate_job_profile_ai(role, level, purpose):
 # Cache koneksi database
 @st.cache_resource
 def init_connection():
-    """Menginisialisasi koneksi ke database PostgreSQL."""
+    """Initializes a connection to a PostgreSQL database."""
     try:
         # Pengecekan keberadaan kunci secara kolektif
         host = check_secrets_key("postgres.host", "Database Host")
@@ -138,7 +138,7 @@ def init_connection():
         port = check_secrets_key("postgres.port", "Database Port")
         
         if any(v is None for v in [host, dbname, user, password, port]):
-            st.error("Detail koneksi PostgreSQL (host, dbname, user, password, port) tidak ditemukan di Streamlit Secrets.")
+            st.error("PostgreSQL connection details (host, dbname, user, password, port) were not found in Streamlit Secrets.")
             return None
 
         conn = psycopg2.connect(
@@ -151,13 +151,13 @@ def init_connection():
         return conn
     except Exception as e:
         st.error(f"Error connecting to database: {e}")
-        st.error("Pastikan Anda telah membuat file .streamlit/secrets.toml dengan benar dan detail koneksi PostgreSQL valid.")
+        st.error("Make sure you have created the .streamlit/secrets.toml file correctly and the PostgreSQL connection details are valid.")
         return None
 
 # Cache data karyawan
 @st.cache_data(ttl=600) # Refresh setiap 10 menit
 def get_employee_list(_conn):
-    """Mengambil daftar employee_id dan fullname dari database."""
+    """Retrieving a list of employee_id and fullname from the database."""
     empty_df = pd.DataFrame({'employee_id': [], 'label': []})
     if _conn is None:
         return empty_df
@@ -172,7 +172,7 @@ def get_employee_list(_conn):
             df['label'] = df['fullname'].str.strip() + " (" + df['employee_id'].astype(str).str.strip() + ")"
             return df[['employee_id', 'label']]
         else:
-            st.error("Tabel 'employees' tidak memiliki kolom 'fullname' atau 'employee_id'.")
+            st.error("The table 'employees' does not have a column 'fullname' or 'employee_id'.")
             return empty_df
     except Exception as e:
         st.error(f"Error fetching employee list: {e}")
@@ -180,14 +180,14 @@ def get_employee_list(_conn):
 
 # Fungsi utama untuk menjalankan query match
 def run_talent_match_query(conn, bench_ids, weights):
-    """Menjalankan fungsi SQL fn_talent_management.""" 
+    """Executes the SQL function fn_talent_management.""" 
     if not conn:
         return pd.DataFrame() 
     
     # 1. Validasi Bobot
     required_weights = {"cognitive", "competency", "behavioral", "contextual"}
     if not all(key in weights for key in required_weights):
-         st.warning(f"Konfigurasi bobot tidak valid. Diperlukan kunci: {', '.join(required_weights)}.")
+         st.warning(f"Invalid weight configuration. Key required: {', '.join(required_weights)}.")
          return pd.DataFrame()
 
     weights_json = json.dumps(weights) 
@@ -218,12 +218,12 @@ def run_talent_match_query(conn, bench_ids, weights):
 # --- Fungsi Visualisasi ---
 
 def create_radar_chart(df, candidate_id, candidate_name):
-    """Membuat Radar Chart perbandingan TGV (Dinamis)."""
+    """Create a TGV comparison Radar Chart (Dynamic)."""
     # Ambil data unik TGV untuk kandidat
     candidate_data = df[df['employee_id'] == candidate_id].drop_duplicates(subset=['tgv_name'])
     
     if candidate_data.empty or 'tgv_name' not in candidate_data.columns:
-        st.warning("Data TGV tidak ditemukan untuk Radar Chart.")
+        st.warning("No TGV data found for Radar Chart.")
         return go.Figure()
 
     # Ambil kategori TGV secara dinamis dari data
@@ -273,7 +273,7 @@ def create_tv_heatmap(df, candidate_id, candidate_name):
     candidate_data = df[df['employee_id'] == candidate_id].copy()
     
     if 'tgv_name' not in candidate_data.columns or 'tv_name' not in candidate_data.columns or 'tv_match_rate' not in candidate_data.columns:
-        st.warning("Data tidak lengkap untuk membuat Heatmap TV (memerlukan tgv_name, tv_name, tv_match_rate).")
+        st.warning("Incomplete data to create TV Heatmap (requires tgv_name, tv_name, tv_match_rate).")
         return go.Figure()
 
     # Buat pivot table untuk heatmap
@@ -284,7 +284,7 @@ def create_tv_heatmap(df, candidate_id, candidate_name):
             values='tv_match_rate'
         )
     except Exception as e:
-        st.warning(f"Gagal membuat pivot data untuk heatmap: {e}")
+        st.warning(f"Failed to pivot data for heatmap: {e}")
         return go.Figure()
 
     fig = px.imshow(
@@ -293,7 +293,7 @@ def create_tv_heatmap(df, candidate_id, candidate_name):
         aspect="auto",
         color_continuous_scale='RdYlGn', 
         range_color=[0, 100], 
-        title=f"Heatmap Kecocokan Talent Variable (TV) untuk {candidate_name}"
+        title=f"Talent Variable (TV) Match Heatmap for{candidate_name}"
     )
     
     fig.update_layout(
@@ -310,7 +310,7 @@ def create_tv_heatmap(df, candidate_id, candidate_name):
 
 def create_strengths_gaps_charts(df, candidate_id):
     """
-    Membuat bar chart horizontal untuk Top 5 Kekuatan dan Kesenjangan TV.
+    Create a horizontal bar chart for the Top 5 TV Strengths and Gaps.   
     """
     candidate_data = df[df['employee_id'] == candidate_id].copy()
     
@@ -389,7 +389,7 @@ def generate_candidate_summary(selected_candidate_id, candidate_name, summary_df
         worst_tv = tv_data.iloc[-1]
         
         # 5. Tampilkan Metrik
-        st.subheader(f"💡 Ringkasan Wawasan untuk {candidate_name}")
+        st.subheader(f"💡 Insight Summary for {candidate_name}")
         
         col1, col2, col3, col4 = st.columns(4)
         
@@ -444,11 +444,11 @@ def generate_candidate_summary(selected_candidate_id, candidate_name, summary_df
             """)
 
     except Exception as e:
-        st.error(f"Gagal membuat ringkasan wawasan: {e}")
+        st.error(f"Failed to create insight summary: {e}")
 
 
 # --- Sidebar Input Form ---
-st.sidebar.header("🔍 Konfigurasi Pencocokan")
+st.sidebar.header("🔍 Match Configuration")
 
 # Inisialisasi koneksi dan ambil data karyawan
 conn = init_connection()
@@ -462,7 +462,7 @@ role_purpose = st.sidebar.text_area("Role Purpose (1-2 sentences)", placeholder=
 
 # 2. Input Benchmark Talenta
 st.sidebar.markdown("---")
-st.sidebar.subheader("🎯 Pilih Benchmark Talenta (Rating 5)")
+st.sidebar.subheader("🎯 Choose Talent Benchmark (Rating 5)")
 selected_labels = st.sidebar.multiselect(
     "Pilih Karyawan Benchmark:",
     options=df_employees['label'].tolist(),
@@ -473,7 +473,7 @@ selected_talent_ids = df_employees[df_employees['label'].isin(selected_labels)][
 
 # 3. Input Bobot TGV
 st.sidebar.markdown("---")
-st.sidebar.subheader("⚖️ Konfigurasi Bobot TGV")
+st.sidebar.subheader("⚖️ TGV Weight Configuration")
 default_weights = {"cognitive": 0.35, "competency": 0.30, "behavioral": 0.25, "contextual": 0.10}
 current_total = sum(default_weights.values())
 
@@ -487,11 +487,11 @@ weights_config["behavioral"] = col_w1.number_input("Behavioral", 0.0, 1.0, defau
 weights_config["contextual"] = col_w2.number_input("Contextual", 0.0, 1.0, default_weights["contextual"], 0.05, key="num_cont")
 
 current_total = sum(weights_config.values())
-st.sidebar.caption(f"Total Bobot Saat Ini: **{current_total:.2f}**")
+st.sidebar.caption(f"Current Total Weight: **{current_total:.2f}**")
 is_weights_valid = abs(current_total - 1.0) < 0.01
 
 if not is_weights_valid:
-    st.sidebar.error("Total bobot harus mendekati 1.0.")
+    st.sidebar.error("The total weight should be close to 1.0.")
 
 run_button = st.sidebar.button("🚀 Jalankan Pencocokan Talenta", disabled=not conn or not selected_talent_ids or not is_weights_valid)
 
@@ -499,13 +499,13 @@ run_button = st.sidebar.button("🚀 Jalankan Pencocokan Talenta", disabled=not 
 
 if run_button:
     if not conn:
-        st.error("Koneksi database gagal. Harap periksa `secrets.toml` Anda.")
+        st.error("Database connection failed. Please check your `secrets.toml`.")
     elif not selected_talent_ids:
-        st.sidebar.error("Harap pilih minimal satu karyawan benchmark.")
+        st.sidebar.error("Please select at least one benchmark employee.")
     elif not is_weights_valid:
-         st.sidebar.error("Konfigurasi bobot tidak valid. Harap periksa input Anda.")
+         st.sidebar.error("Invalid weight configuration. Please check your input.")
     else:
-        with st.spinner(f"Menjalankan SQL Talent Match untuk {st.session_state['role_name_input']}..."):
+        with st.spinner(f"Run SQL Talent Match for {st.session_state['role_name_input']}..."):
             # (BARU) Simpan hasil ke session state
             st.session_state.results_df = run_talent_match_query(conn, selected_talent_ids, weights_config)
             # (BARU) Reset pilihan kandidat detail saat query baru dijalankan
@@ -548,7 +548,7 @@ if not st.session_state.results_df.empty:
         summary_cols.extend(list(tgv_cols_map.keys()))
     
     # 1. Tampilkan Ringkasan & Tabel Peringkat
-    st.header(f"🏆 Peringkat {len(summary_df)} Kandidat untuk {st.session_state['role_name_input']}")
+    st.header(f"🏆 Ranking {len(summary_df)} Candidates for {st.session_state['role_name_input']}")
     
     st.dataframe(
         summary_df[summary_cols].head(10).style.format({
@@ -562,7 +562,7 @@ if not st.session_state.results_df.empty:
     st.markdown("---")
 
     # 2. Visualisasi Detail
-    st.header("📊 Detail Analisis TGV dan TV")
+    st.header("📊 Detailed TGV and TV Analysis")
 
     # Logika selectbox untuk persistensi
     unique_candidates = summary_df['employee_id'].unique()
@@ -580,7 +580,7 @@ if not st.session_state.results_df.empty:
         st.session_state[state_key] = candidate_labels.get(top_candidate_id, top_candidate_id)
 
     selected_candidate_label = st.selectbox(
-        "Pilih Kandidat untuk Perbandingan Detail:",
+        "Select Candidate for Detailed Comparison:",
         options=current_options,
         key=state_key 
     )
@@ -612,7 +612,7 @@ if not st.session_state.results_df.empty:
         
         # Visualisasi Kekuatan dan Kesenjangan
         st.markdown("---")
-        st.subheader(f"Analisis Kekuatan & Kesenjangan TV untuk {selected_candidate_label.split(' (')[0]}")
+        st.subheader(f"TV Strengths & Gaps Analysis for {selected_candidate_label.split(' (')[0]}")
         
         fig_strengths, fig_gaps = create_strengths_gaps_charts(results_df, selected_candidate_id)
         
@@ -623,16 +623,16 @@ if not st.session_state.results_df.empty:
             with col_gap_2:
                 st.plotly_chart(fig_gaps, use_container_width=True)
         else:
-            st.warning("Tidak dapat membuat visualisasi Kekuatan/Kesenjangan. Kolom 'tv_match_rate' atau 'tv_name' mungkin hilang dari hasil query.")
+            st.warning("Unable to create Strength/Gap visualization. Column 'tv_match_rate' or 'tv_name' may be missing from the query results.")
 
 
 elif run_button and st.session_state.results_df.empty:
-     st.warning("Tidak ada hasil yang ditemukan. Pastikan koneksi database aktif, dan fungsi SQL 'fn_talent_management' tersedia dengan parameter yang benar, serta ID benchmark memiliki data yang memadai.")
+     st.warning("No results found. Ensure the database connection is active, the SQL function 'fn_talent_management' is available with the correct parameters, and the benchmark ID has sufficient data.")
 
 # --- Bagian AI Job Profile Generator ---
 st.sidebar.markdown("---")
 st.sidebar.subheader("🤖 AI Job Profile Generator")
-generate_profile = st.sidebar.button("Buat Profil Pekerjaan (AI)", key="ai_button")
+generate_profile = st.sidebar.button("Create Job Profile (AI)", key="ai_button")
 
 if generate_profile:
     role = st.session_state['role_name_input']
@@ -640,9 +640,9 @@ if generate_profile:
     purpose = st.session_state['role_purpose_input']
     
     if not role or not purpose:
-         st.sidebar.error("Nama peran dan Tujuan Peran tidak boleh kosong.")
+         st.sidebar.error("The role name and Role Purpose cannot be empty.")
     else:
-        with st.spinner("Membuat draf profil pekerjaan dengan AI..."):
+        with st.spinner("Drafting job profiles with AI..."):
             profile_json = generate_job_profile_ai(role, level, purpose)
             
             if isinstance(profile_json, dict):
@@ -656,44 +656,44 @@ if generate_profile:
 # Tampilkan Profil AI jika sudah ada di session state
 if st.session_state.get('generated_profile'):
     st.markdown("---")
-    st.header(f" Draf Profil Pekerjaan untuk {st.session_state['role_name_input']} (Dibuat oleh AI)")
+    st.header(f" Draft Job Profile for {st.session_state['role_name_input']} (Dibuat oleh AI)")
     
     profile = st.session_state['generated_profile']
     
     # Tampilkan Ringkasan
-    st.subheader("Ringkasan Peran")
+    st.subheader("Role Summary")
     st.markdown(f"***{profile.get('summary', 'Tidak Ada Ringkasan')}***")
 
     col_ai_1, col_ai_2 = st.columns(2)
     
     with col_ai_1:
-        st.subheader("Tanggung Jawab Utama")
+        st.subheader("Primary Responsibilities")
         responsibilities = profile.get('responsibilities', [])
         if responsibilities:
             for item in responsibilities:
                 st.markdown(f"- {item}")
         else:
-            st.info("Tidak ada data tanggung jawab.")
+            st.info("No liability data.")
             
-        st.subheader("Kualifikasi Minimum")
+        st.subheader("Minimum Qualifications")
         qualifications = profile.get('qualifications', [])
         if qualifications:
             for item in qualifications:
                 st.markdown(f"- {item}")
         else:
-            st.info("Tidak ada data kualifikasi.")
+            st.info("No qualification data.")
 
     with col_ai_2:
-        st.subheader("Keterampilan yang Diutamakan")
+        st.subheader("Preferred Skills")
         skills = profile.get('skills', [])
         if skills:
             for item in skills:
                 st.markdown(f"- {item}")
         else:
-            st.info("Tidak ada data keterampilan.")
+            st.info("No skills data.")
     
     st.markdown("---")
-    if st.button("Bersihkan Draf Profil", key="clear_ai_button"):
+    if st.button("Clean Draft Profile", key="clear_ai_button"):
         st.session_state['generated_profile'] = None
         st.rerun() 
 
