@@ -254,7 +254,7 @@ def create_radar_chart(df, candidate_id, candidate_name):
     ))
 
     fig.update_layout(
-        title=f"Skor Kecocokan TGV untuk {candidate_name}",
+        title=f"TGV Match Score for {candidate_name}",
         polar=dict(
             radialaxis=dict(visible=True, range=[0, 105], ticksuffix="%"),
             angularaxis=dict(direction="clockwise")
@@ -293,7 +293,7 @@ def create_tv_heatmap(df, candidate_id, candidate_name):
         aspect="auto",
         color_continuous_scale='RdYlGn', 
         range_color=[0, 100], 
-        title=f"Talent Variable (TV) Match Heatmap for{candidate_name}"
+        title=f"Talent Variable (TV) Match Heatmap for {candidate_name}"
     )
     
     fig.update_layout(
@@ -337,7 +337,7 @@ def create_strengths_gaps_charts(df, candidate_id):
         x='tv_match_rate',
         y='tv_name',
         orientation='h',
-        title='Top 5 Kekuatan (Talent Variables)',
+        title='Top 5 Strengths (Talent Variables)',
         labels={'tv_match_rate': 'Match Rate (%)', 'tv_name': 'Talent Variable'},
         color='tv_match_rate',
         color_continuous_scale=px.colors.sequential.Greens,
@@ -353,7 +353,7 @@ def create_strengths_gaps_charts(df, candidate_id):
         x='tv_match_rate',
         y='tv_name',
         orientation='h',
-        title='Top 5 Kesenjangan (Talent Variables)',
+        title='Top 5 Gaps (Talent Variables)',
         labels={'tv_match_rate': 'Match Rate (%)', 'tv_name': 'Talent Variable'},
         color='tv_match_rate',
         color_continuous_scale=px.colors.sequential.Reds_r, # Reverse Reds
@@ -395,7 +395,7 @@ def generate_candidate_summary(selected_candidate_id, candidate_name, summary_df
         
         # Kolom 1: Peringkat & Skor
         col1.metric(
-            label="Peringkat Keseluruhan",
+            label="Overall Rating",
             value=f"#{int(candidate_summary['rank'])}",
             delta=f"{candidate_summary['final_match_rate']:.2f}% Match",
             delta_color="off"
@@ -403,7 +403,7 @@ def generate_candidate_summary(selected_candidate_id, candidate_name, summary_df
         
         # Kolom 2: TGV Terbaik
         col2.metric(
-            label="TGV Terbaik",
+            label="Best TGV",
             value=best_tgv['tgv_name'],
             delta=f"{best_tgv['tgv_match_rate']:.2f}%",
             delta_color="normal" # "normal" = hijau
@@ -411,7 +411,7 @@ def generate_candidate_summary(selected_candidate_id, candidate_name, summary_df
         
         # Kolom 3: TGV Terburuk
         col3.metric(
-            label="TGV Terendah",
+            label="Lowest TGV",
             value=worst_tgv['tgv_name'],
             delta=f"{worst_tgv['tgv_match_rate']:.2f}%",
             delta_color="inverse" # "inverse" = merah
@@ -419,7 +419,7 @@ def generate_candidate_summary(selected_candidate_id, candidate_name, summary_df
         
         # Kolom 4: Info Tambahan
         col4.metric(
-            label="Direktorat",
+            label="Directorate",
             value=candidate_summary['directorate'],
             delta=candidate_summary['grade'],
             delta_color="off"
@@ -431,16 +431,16 @@ def generate_candidate_summary(selected_candidate_id, candidate_name, summary_df
         
         with col_tv1:
             st.success(f"""
-            **Kekuatan TV Teratas:**
-            - **{best_tv['tv_name']}** (dari {best_tv['tgv_name']})
-            - Skor Kecocokan: **{best_tv['tv_match_rate']:.2f}%**
+            **Top TV Powers:**
+            - **{best_tv['tv_name']}** (From {best_tv['tgv_name']})
+            - Match Score: **{best_tv['tv_match_rate']:.2f}%**
             """)
 
         with col_tv2:
             st.warning(f"""
-            **Kesenjangan TV Terbesar:**
-            - **{worst_tv['tv_name']}** (dari {worst_tv['tgv_name']})
-            - Skor Kecocokan: **{worst_tv['tv_match_rate']:.2f}%**
+            **Biggest TV Gap:**
+            - **{worst_tv['tv_name']}** (From {worst_tv['tgv_name']})
+            - Match Score: **{worst_tv['tv_match_rate']:.2f}%**
             """)
 
     except Exception as e:
@@ -605,7 +605,7 @@ if not st.session_state.results_df.empty:
             st.plotly_chart(fig_radar, use_container_width=True)
 
         with col_viz_2:
-            st.markdown(f"#### Heatmap Skor TV: {selected_candidate_label.split(' (')[0]}")
+            st.markdown(f"#### TV Score Heatmap: {selected_candidate_label.split(' (')[0]}")
             fig_heatmap = create_tv_heatmap(results_df, selected_candidate_id, selected_candidate_label.split(' (')[0])
             st.plotly_chart(fig_heatmap, use_container_width=True)
             
