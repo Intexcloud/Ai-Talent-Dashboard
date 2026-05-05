@@ -105,7 +105,7 @@ These instructions will help you run the Streamlit application on your local mac
     ```bash
     streamlit run main.py
     ```
-Open [http://localhost:8501](http://localhost:8501) in your browser to see the application in action.
+##Open [http://localhost:8501](http://localhost:8501) in your browser to see the application in action.
 ---
 *   **Candidate Gap Analysis:**
     *   ![Candidate Details](Screenshots/Output4.png)
