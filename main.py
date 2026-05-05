@@ -8,7 +8,7 @@ from openai import OpenAI
 
 # --- Konfigurasi Halaman & Judul ---
 st.set_page_config(layout="wide", page_title="AI Talent Match Intelligence")
-st.title("🚀 AI Talent Match Intelligence Dashboard")
+st.title("🚀 Talent Match Intelligence Dashboard")
 st.markdown("Find the best internal candidates based on benchmark profiles.")
 
 # --- Inisialisasi Session State ---
