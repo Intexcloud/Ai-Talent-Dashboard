@@ -1,4 +1,4 @@
-# Case Study: Talent Match Intelligence System
+# 🤖 Case Study: Talent Match Intelligence System
 **This repository contains the complete solution for the 2025 Data Analyst Case Study, focusing on the end-to-end design and implementation of a Talent Match Intelligence system.**
 
 Deployed Application Link: [https://ai-talent-match-intelligence.streamlit.app/](https://ai-talent-match-intelligence.streamlit.app/)
