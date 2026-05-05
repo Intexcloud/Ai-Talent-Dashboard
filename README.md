@@ -110,13 +110,13 @@ These instructions will help you run the Streamlit application on your local mac
 ## 6. Example of Application Display
 Here are some screenshots of the final dashboard application.
 
-*   Candidate Gap Analysis:
-    *   ![Candidate Details](Screenshots/Output4.png)
+* Candidate Gap Analysis:
+     ![Candidate Details](Screenshots/Output4.png)
       
 * User Input & AI Generation Page:
-     * ![Halaman Input](Screenshots/Output1.png)
-     * ![AI](Screenshots/Output5.png)
+     ![Halaman Input](Screenshots/Output1.png)
+     ![AI](Screenshots/Output5.png)
        
 * Talent Ranking Dashboard & Visualization:
-    * ![Visualisasi](Screenshots/Output2.png)
-    * ![Visualisasi](Screenshots/Output3.png)
+     ![Visualisasi](Screenshots/Output2.png)
+     ![Visualisasi](Screenshots/Output3.png)
