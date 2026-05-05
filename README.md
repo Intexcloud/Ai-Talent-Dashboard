@@ -1,118 +1,476 @@
-# Case Study: Sistem Intelijen Pencocokan Talenta (Talent Match Intelligence System) 
-**Repositori ini berisi solusi lengkap untuk Studi Kasus Data Analyst 2025, yang berfokus pada perancangan dan implementasi sistem Talent Match Intelligence dari awal hingga akhir.**
+# Case Study: Talent Match Intelligence System
+**This repository contains the complete solution for the 2025 Data Analyst Case Study, focusing on the end-to-end design and implementation of a Talent Match Intelligence system.**
 
-Tautan Aplikasi yang Telah Di-deploy: https://ai-talent-match-intelligence.streamlit.app/
+Deployed Application Link: [https://ai-talent-match-intelligence.streamlit.app/](https://ai-talent-match-intelligence.streamlit.app/)
 
-## 1. Latar Belakang Proyek
-Proyek ini menyimulasikan alur kerja analisis data di Perusahaan X untuk membangun sebuah Talent Match Intelligence system. Tujuannya adalah untuk membantu para pemimpin bisnis membuat keputusan suksesi yang lebih baik dengan:
-1.	Menemukan Pola Sukses: Menganalisis data karyawan untuk mengidentifikasi apa yang membuat karyawan berkinerja tinggi (rating 5) sukses.
-2.	Merumuskan Logika: Menerjemahkan pola-pola tersebut ke dalam logika SQL yang dapat menghitung skor kecocokan (match score).
-3.	Membangun Aplikasi: Menyajikan wawasan melalui aplikasi dasbor bertenaga AI yang interaktif.
+---
 
-## 2. Alur Kerja Proyek & Metodologi
-Solusi ini dibagi menjadi tiga tahap utama sesuai dengan brief studi kasus:
+## 1. Project Background
+This project simulates the data analysis workflow at Company X to build a Talent Match Intelligence system. The objective is to assist business leaders in making better succession decisions by:
+1.  **Identifying Success Patterns:** Analyzing employee data to identify the traits and drivers of high-performing employees (rating 5).
+2.  **Formulating Logic:** Translating these patterns into SQL logic capable of calculating a "match score."
+3.  **Building the Application:** Presenting insights through an interactive, AI-powered dashboard application.
 
-### Tahap 1: Penemuan Pola Sukses (Success Pattern Discovery)
+## 2. Project Workflow & Methodology
+The solution is divided into three main stages as per the case study brief:
 
- * Tujuan: Mengidentifikasi faktor pembeda (driver) karyawan dengan rating kinerja 5.
- *  Proses:
-    * Melakukan Analisis Data Eksploratif (EDA) pada berbagai set data, termasuk:
-        * Pilar Kompetensi (competencies_yearly).
-        * Profil Psikometri (papi_scores, profiles_psych).
-        * Data Perilaku (strengths).
-        * Faktor Kontekstual (jabatan, masa kerja, pendidikan, dll.).
-* Menggunakan visualisasi seperti heatmaps, radar charts, dan correlation plots untuk mengkomunikasikan temuan.
-* Mensintesis temuan ini menjadi "Success Formula" yang dapat dijelaskan, yang mendefinisikan Talent Group Variables (TGV) dan Talent Variables (TV) yang paling penting.
+### Phase 1: Success Pattern Discovery
+*   **Goal:** Identify the differentiating factors (drivers) of employees with a performance rating of 5.
+*   **Process:**
+    *   Conduct Exploratory Data Analysis (EDA) on various datasets, including:
+        *   Competency Pillars (`competencies_yearly`).
+        *   Psychometric Profiles (`papi_scores`, `profiles_psych`).
+        *   Behavioral Data (`strengths`).
+        *   Contextual Factors (job title, tenure, education, etc.).
+    *   Use visualizations such as heatmaps, radar charts, and correlation plots to communicate findings.
+    *   Synthesize these findings into an explainable "Success Formula," defining the most critical Talent Group Variables (TGV) and Talent Variables (TV).
 
-### Tahap 2: Operasionalisasi Logika dalam SQL
- * Tujuan: Menerjemahkan Success Formula menjadi kueri SQL yang dapat menghitung skor kecocokan untuk semua karyawan terhadap benchmark yang dipilih.
- *  Proses:
-    * Merancang kueri SQL modular menggunakan Common Table Expressions (CTEs) di Postgres (Supabase).
-    * Logika Perhitungan:
-        * Baseline Aggregation: Menghitung skor baseline (median) dari talenta benchmark yang dipilih.
-        * TV Match Rate: Menghitung kecocokan per variabel (TV), menangani logika numerik (rasio) dan kategorikal (boolean).
-        * TGV Match Rate: Mengagregasi skor TV menjadi skor grup (TGV).
-        * Final Match Rate: Menghitung rata-rata tertimbang akhir dari semua TGV.
-* Kueri ini menghasilkan tabel output terperinci seperti yang diminta.
+### Phase 2: Operationalizing Logic in SQL
+*   **Goal:** Translate the Success Formula into SQL queries to calculate match scores for all employees against a selected benchmark.
+*   **Process:**
+    *   Design modular SQL queries using Common Table Expressions (CTEs) in Postgres (Supabase).
+    *   **Calculation Logic:**
+        *   *Baseline Aggregation:* Calculate baseline scores (median) from the selected benchmark talent.
+        *   *TV Match Rate:* Calculate matches per variable (TV), handling numerical (ratio) and categorical (boolean) logic.
+        *   *TGV Match Rate:* Aggregate TV scores into group scores (TGV).
+        *   *Final Match Rate:* Calculate the final weighted average of all TGVs.
+*   The query generates a detailed output table as requested.
 
-### Tahap 3: Aplikasi AI Talent & Dasbor
-* Tujuan: Mengubah data hasil SQL menjadi wawasan yang dapat ditindaklanjuti (actionable) melalui aplikasi yang dinamis dan bertenaga AI.
-    * Proses:
-      * Membangun aplikasi web menggunakan Streamlit.
-      * Aplikasi ini tidak statis; ia mengambil input pengguna secara real-time (Nama Peran, Level Pekerjaan, ID Karyawan Benchmark).
-      * Integrasi AI (LLM): Menggunakan API LLM (seperti OpenRouter) untuk secara otomatis menghasilkan Deskripsi Pekerjaan, Persyaratan, dan Kompetensi Kunci berdasarkan input pengguna.
-      * Visualisasi Dasbor: Saat input baru diserahkan, aplikasi akan menjalankan ulang kueri SQL yang diparameterisasi  dan menyajikan:
-        * Profil Pekerjaan (AI-Generated): Teks yang dihasilkan oleh LLM.
-        * Peringkat Talenta (Ranked Talent List): Tabel karyawan yang dapat diurutkan berdasarkan final_match_rate.
-        * Visualisasi Wawasan: Grafik interaktif yang menunjukkan distribusi skor, kekuatan & kelemahan TGV teratas, dan perbandingan kandidat vs. benchmark.
+### Phase 3: AI Talent App & Dashboard
+*   **Goal:** Transform SQL results into actionable insights via a dynamic, AI-powered application.
+*   **Process:**
+    *   Build a web application using Streamlit.
+    *   The app is non-static; it captures real-time user inputs (Role Name, Job Level, Benchmark Employee ID).
+    *   **AI Integration (LLM):** Utilize LLM APIs (such as OpenRouter) to automatically generate Job Descriptions, Requirements, and Key Competencies based on user input.
+    *   **Dashboard Visualization:** When new input is submitted, the app reruns parameterized SQL queries and displays:
+        *   *Job Profile (AI-Generated):* Text generated by the LLM.
+        *   *Ranked Talent List:* A table of employees sortable by `final_match_rate`.
+        *   *Insight Visualizations:* Interactive charts showing score distribution, top TGV strengths & weaknesses, and candidate vs. benchmark comparisons.
 
-## 3. Tumpukan Teknologi (Technology Stack)
-Berikut adalah alat dan platform yang digunakan dalam proyek ini
-| Kategori               | Alat/Platform          | Kegunaan                                                     |
-| ---------------------- | -----------------------| -------------------------------------------------------------|
-| Database               | Postgres               | Penyimpanan data dan eksekusi logika SQL.                    |
-| Analisis & Kueri       | Python (Pandas) & SQL  | Untuk EDA, penemuan pola, dan algoritma pencocokan.          |
-| Aplikasi & Visualisasi | Streamlit              | Untuk membangun dan men-deploy dasbor wawasan interaktif.    |
-| Model AI               | OpenRouter (LLM)       | Untuk menghasilkan deskripsi pekerjaan dan profil kompetensi.|
-| Version Control        | GitHub                 | Untuk manajemen kode sumber dan dokumentasi.                 | 
+---
 
+## 3. Technology Stack
+The following tools and platforms were used in this project:
 
-## 4. Skema Database (ERD)
-Analisis dan kueri didasarkan pada skema database yang disediakan, yang mencakup data organisasi, kinerja, kompetensi, dan psikometri.
-!<img width="1231" height="845" alt="ERD AI" src="https://github.com/user-attachments/assets/0dbd11ac-fedb-4a7b-b771-20ec2a04e4ae" />
+| Category               | Tool/Platform           | Purpose                                                         |
+| :--------------------- | :---------------------- | :-------------------------------------------------------------- |
+| **Database**           | Postgres                | Data storage and SQL logic execution.                           |
+| **Analysis & Querying**| Python (Pandas) & SQL   | For EDA, pattern discovery, and matching algorithms.            |
+| **App & Visualization**| Streamlit               | To build and deploy the interactive insight dashboard.          |
+| **AI Model**           | OpenRouter (LLM)        | To generate job descriptions and competency profiles.           |
+| **Version Control**    | GitHub                  | For source code management and documentation.                   |
 
+---
 
-## 5. Cara Menjalankan Proyek Ini Secara Lokal
-  Petunjuk ini akan membantu Anda menjalankan aplikasi Streamlit di mesin lokal Anda.
-  Prasyarat :
-    * Python 3.8+
-    * Akses ke database Supabase (Postgres) yang telah diisi dengan data.
-    * API Key untuk layanan LLM (misalnya, OpenRouter).
+## 4. Database Schema (ERD)
+The analysis and queries are based on the provided database schema, which includes organizational data, performance, competencies, and psychometrics.
+![ERD AI](https://github.com/user-attachments/assets/0dbd11ac-fedb-4a7b-b771-20ec2a04e4ae)
 
-  ###  Langkah-langkah Instalasi
-  1. Clone Repositori:
-      ```bash
-        git clone https://github.com/Intexcloud/Ai-Talent-Dashboard.git
-        cd Ai-Talent-Dashboard
-      ```
-  2. Buat Lingkungan Virtual (Virtual Environment):
-      ```bash
-        python -m venv venv
-        source venv/bin/activate  # Di Windows, gunakan: venv\Scripts\activate
-      ```
-  3. Instal Dependensi: File requirements.txt berisi semua library Python yang diperlukan (seperti Streamlit, Pandas, psycopg2, dll.).
-      ```bash
-          pip install -r requirements.txt
-      ```
-  4. Siapkan Environment Variables: Buat file .env di direktori root proyek.
-     File ini akan menyimpan kredensial rahasia Anda. (Streamlit juga dapat menggunakan fitur Secrets Management bawaannya jika di-deploy).
-       ```Ini.TOML
-          # .env
-          DB_HOST="[HOST_SUPABASE_ANDA]"
-          DB_PORT="[PORT_ANDA]"
-          DB_NAME="postgres"
-          DB_USER="postgres"
-          DB_PASS="[PASSWORD_DATABASE_ANDA]"
-          OPENROUTER_API_KEY="[API_KEY_OPENROUTER_ANDA]"
-       ```
-  5. Jalankan Aplikasi
-      ```bash
-          streamlit run main.py
-      ```
-Buka http://localhost:8501 di browser Anda untuk melihat aplikasi beraksi.
+---
 
+## 5. How to Run This Project Locally
+These instructions will help you run the Streamlit application on your local machine.
 
-## 6. Contoh Tampilan Aplikasi
+### Prerequisites:
+*   Python 3.8+
+*   Access to a Supabase (Postgres) database populated with data.
+*   API Key for an LLM service (e.g., OpenRouter).
 
-Berikut adalah beberapa tangkapan layar dari aplikasi dashboard akhir:
-  * Halaman Input Pengguna & Pembuatan AI:
-      ![Halaman Input](Screenshots/Output1.png)
-      ![AI](Screenshots/Output5.png)
+### Installation Steps:
+1.  **Clone the Repository:**
+    ```bash
+    git clone [https://github.com/Intexcloud/Ai-Talent-Dashboard.git](https://github.com/Intexcloud/Ai-Talent-Dashboard.git)
+    cd Ai-Talent-Dashboard
+    ```
+2.  **Create a Virtual Environment:**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows, use: venv\Scripts\activate
+    ```
+3.  **Install Dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+4.  **Set Up Environment Variables:** Create a `.env` file in the project root directory to store your credentials.
+    ```toml
+    # .env
+    DB_HOST="[YOUR_SUPABASE_HOST]"
+    DB_PORT="[YOUR_PORT]"
+    DB_NAME="postgres"
+    DB_USER="postgres"
+    DB_PASS="[YOUR_DATABASE_PASSWORD]"
+    OPENROUTER_API_KEY="[YOUR_OPENROUTER_API_KEY]"
+    ```
+5.  **Run the Application:**
+    ```bash
+    streamlit run main.py
+    ```
+Open [http://localhost:8501](http://localhost:8501) in your browser to see the application in action.
 
-  * Dasbor Peringkat Talenta & Visualisasi:
-    ![Visualisasi](Screenshots/Output2.png)
-    ![Visualisasi](Screenshots/Output3.png)
+---
 
-  * Analisa Kesenjangan Kandidat:
-    ![Detail Kandidat](Screenshots/Output4.png)
+## 6# Case Study: Talent Match Intelligence System
+**This repository contains the complete solution for the 2025 Data Analyst Case Study, focusing on the end-to-end design and implementation of a Talent Match Intelligence system.**
 
+Deployed Application Link: [https://ai-talent-match-intelligence.streamlit.app/](https://ai-talent-match-intelligence.streamlit.app/)
+
+---
+
+## 1. Project Background
+This project simulates the data analysis workflow at Company X to build a Talent Match Intelligence system. The objective is to assist business leaders in making better succession decisions by:
+1.  **Identifying Success Patterns:** Analyzing employee data to identify the traits and drivers of high-performing employees (rating 5).
+2.  **Formulating Logic:** Translating these patterns into SQL logic capable of calculating a "match score."
+3.  **Building the Application:** Presenting insights through an interactive, AI-powered dashboard application.
+
+## 2. Project Workflow & Methodology
+The solution is divided into three main stages as per the case study brief:
+
+### Phase 1: Success Pattern Discovery
+*   **Goal:** Identify the differentiating factors (drivers) of employees with a performance rating of 5.
+*   **Process:**
+    *   Conduct Exploratory Data Analysis (EDA) on various datasets, including:
+        *   Competency Pillars (`competencies_yearly`).
+        *   Psychometric Profiles (`papi_scores`, `profiles_psych`).
+        *   Behavioral Data (`strengths`).
+        *   Contextual Factors (job title, tenure, education, etc.).
+    *   Use visualizations such as heatmaps, radar charts, and correlation plots to communicate findings.
+    *   Synthesize these findings into an explainable "Success Formula," defining the most critical Talent Group Variables (TGV) and Talent Variables (TV).
+
+### Phase 2: Operationalizing Logic in SQL
+*   **Goal:** Translate the Success Formula into SQL queries to calculate match scores for all employees against a selected benchmark.
+*   **Process:**
+    *   Design modular SQL queries using Common Table Expressions (CTEs) in Postgres (Supabase).
+    *   **Calculation Logic:**
+        *   *Baseline Aggregation:* Calculate baseline scores (median) from the selected benchmark talent.
+        *   *TV Match Rate:* Calculate matches per variable (TV), handling numerical (ratio) and categorical (boolean) logic.
+        *   *TGV Match Rate:* Aggregate TV scores into group scores (TGV).
+        *   *Final Match Rate:* Calculate the final weighted average of all TGVs.
+*   The query generates a detailed output table as requested.
+
+### Phase 3: AI Talent App & Dashboard
+*   **Goal:** Transform SQL results into actionable insights via a dynamic, AI-powered application.
+*   **Process:**
+    *   Build a web application using Streamlit.
+    *   The app is non-static; it captures real-time user inputs (Role Name, Job Level, Benchmark Employee ID).
+    *   **AI Integration (LLM):** Utilize LLM APIs (such as OpenRouter) to automatically generate Job Descriptions, Requirements, and Key Competencies based on user input.
+    *   **Dashboard Visualization:** When new input is submitted, the app reruns parameterized SQL queries and displays:
+        *   *Job Profile (AI-Generated):* Text generated by the LLM.
+        *   *Ranked Talent List:* A table of employees sortable by `final_match_rate`.
+        *   *Insight Visualizations:* Interactive charts showing score distribution, top TGV strengths & weaknesses, and candidate vs. benchmark comparisons.
+
+---
+
+## 3. Technology Stack
+The following tools and platforms were used in this project:
+
+| Category               | Tool/Platform           | Purpose                                                         |
+| :--------------------- | :---------------------- | :-------------------------------------------------------------- |
+| **Database**           | Postgres                | Data storage and SQL logic execution.                           |
+| **Analysis & Querying**| Python (Pandas) & SQL   | For EDA, pattern discovery, and matching algorithms.            |
+| **App & Visualization**| Streamlit               | To build and deploy the interactive insight dashboard.          |
+| **AI Model**           | OpenRouter (LLM)        | To generate job descriptions and competency profiles.           |
+| **Version Control**    | GitHub                  | For source code management and documentation.                   |
+
+---
+
+## 4. Database Schema (ERD)
+The analysis and queries are based on the provided database schema, which includes organizational data, performance, competencies, and psychometrics.
+![ERD AI](https://github.com/user-attachments/assets/0dbd11ac-fedb-4a7b-b771-20ec2a04e4ae)
+
+---
+
+## 5. How to Run This Project Locally
+These instructions will help you run the Streamlit application on your local machine.
+
+### Prerequisites:
+*   Python 3.8+
+*   Access to a Supabase (Postgres) database populated with data.
+*   API Key for an LLM service (e.g., OpenRouter).
+
+### Installation Steps:
+1.  **Clone the Repository:**
+    ```bash
+    git clone [https://github.com/Intexcloud/Ai-Talent-Dashboard.git](https://github.com/Intexcloud/Ai-Talent-Dashboard.git)
+    cd Ai-Talent-Dashboard
+    ```
+2.  **Create a Virtual Environment:**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows, use: venv\Scripts\activate
+    ```
+3.  **Install Dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+4.  **Set Up Environment Variables:** Create a `.env` file in the project root directory to store your credentials.
+    ```toml
+    # .env
+    DB_HOST="[YOUR_SUPABASE_HOST]"
+    DB_PORT="[YOUR_PORT]"
+    DB_NAME="postgres"
+    DB_USER="postgres"
+    DB_PASS="[YOUR_DATABASE_PASSWORD]"
+    OPENROUTER_API_KEY="[YOUR_OPENROUTER_API_KEY]"
+    ```
+5.  **Run the Application:**
+    ```bash
+    streamlit run main.py
+    ```
+Open [http://localhost:8501](http://localhost:8501) in your browser to see the application in action.
+
+---
+
+## 6. Application Preview
+Here are some screenshots of the final dashboard application:
+
+*   **User Input Page & AI Generation:**
+    *   ![Input Page](Screenshots/Output1.png)
+    *   ![AI Features](Screenshots/Output5.png)
+
+*   **Talent Ranking Dashboard & Visualization:**
+    *   # Case Study: Talent Match Intelligence System
+**This repository contains the complete solution for the 2025 Data Analyst Case Study, focusing on the end-to-end design and implementation of a Talent Match Intelligence system.**
+
+Deployed Application Link: [https://ai-talent-match-intelligence.streamlit.app/](https://ai-talent-match-intelligence.streamlit.app/)
+
+---
+
+## 1. Project Background
+This project simulates the data analysis workflow at Company X to build a Talent Match Intelligence system. The objective is to assist business leaders in making better succession decisions by:
+1.  **Identifying Success Patterns:** Analyzing employee data to identify the traits and drivers of high-performing employees (rating 5).
+2.  **Formulating Logic:** Translating these patterns into SQL logic capable of calculating a "match score."
+3.  **Building the Application:** Presenting insights through an interactive, AI-powered dashboard application.
+
+## 2. Project Workflow & Methodology
+The solution is divided into three main stages as per the case study brief:
+
+### Phase 1: Success Pattern Discovery
+*   **Goal:** Identify the differentiating factors (drivers) of employees with a performance rating of 5.
+*   **Process:**
+    *   Conduct Exploratory Data Analysis (EDA) on various datasets, including:
+        *   Competency Pillars (`competencies_yearly`).
+        *   Psychometric Profiles (`papi_scores`, `profiles_psych`).
+        *   Behavioral Data (`strengths`).
+        *   Contextual Factors (job title, tenure, education, etc.).
+    *   Use visualizations such as heatmaps, radar charts, and correlation plots to communicate findings.
+    *   Synthesize these findings into an explainable "Success Formula," defining the most critical Talent Group Variables (TGV) and Talent Variables (TV).
+
+### Phase 2: Operationalizing Logic in SQL
+*   **Goal:** Translate the Success Formula into SQL queries to calculate match scores for all employees against a selected benchmark.
+*   **Process:**
+    *   Design modular SQL queries using Common Table Expressions (CTEs) in Postgres (Supabase).
+    *   **Calculation Logic:**
+        *   *Baseline Aggregation:* Calculate baseline scores (median) from the selected benchmark talent.
+        *   *TV Match Rate:* Calculate matches per variable (TV), handling numerical (ratio) and categorical (boolean) logic.
+        *   *TGV Match Rate:* Aggregate TV scores into group scores (TGV).
+        *   *Final Match Rate:* Calculate the final weighted average of all TGVs.
+*   The query generates a detailed output table as requested.
+
+### Phase 3: AI Talent App & Dashboard
+*   **Goal:** Transform SQL results into actionable insights via a dynamic, AI-powered application.
+*   **Process:**
+    *   Build a web application using Streamlit.
+    *   The app is non-static; it captures real-time user inputs (Role Name, Job Level, Benchmark Employee ID).
+    *   **AI Integration (LLM):** Utilize LLM APIs (such as OpenRouter) to automatically generate Job Descriptions, Requirements, and Key Competencies based on user input.
+    *   **Dashboard Visualization:** When new input is submitted, the app reruns parameterized SQL queries and displays:
+        *   *Job Profile (AI-Generated):* Text generated by the LLM.
+        *   *Ranked Talent List:* A table of employees sortable by `final_match_rate`.
+        *   *Insight Visualizations:* Interactive charts showing score distribution, top TGV strengths & weaknesses, and candidate vs. benchmark comparisons.
+
+---
+
+## 3. Technology Stack
+The following tools and platforms were used in this project:
+
+| Category               | Tool/Platform           | Purpose                                                         |
+| :--------------------- | :---------------------- | :-------------------------------------------------------------- |
+| **Database**           | Postgres                | Data storage and SQL logic execution.                           |
+| **Analysis & Querying**| Python (Pandas) & SQL   | For EDA, pattern discovery, and matching algorithms.            |
+| **App & Visualization**| Streamlit               | To build and deploy the interactive insight dashboard.          |
+| **AI Model**           | OpenRouter (LLM)        | To generate job descriptions and competency profiles.           |
+| **Version Control**    | GitHub                  | For source code management and documentation.                   |
+
+---
+
+## 4. Database Schema (ERD)
+The analysis and queries are based on the provided database schema, which includes organizational data, performance, competencies, and psychometrics.
+![ERD AI](https://github.com/user-attachments/assets/0dbd11ac-fedb-4a7b-b771-20ec2a04e4ae)
+
+---
+
+## 5. How to Run This Project Locally
+These instructions will help you run the Streamlit application on your local machine.
+
+### Prerequisites:
+*   Python 3.8+
+*   Access to a Supabase (Postgres) database populated with data.
+*   API Key for an LLM service (e.g., OpenRouter).
+
+### Installation Steps:
+1.  **Clone the Repository:**
+    ```bash
+    git clone [https://github.com/Intexcloud/Ai-Talent-Dashboard.git](https://github.com/Intexcloud/Ai-Talent-Dashboard.git)
+    cd Ai-Talent-Dashboard
+    ```
+2.  **Create a Virtual Environment:**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows, use: venv\Scripts\activate
+    ```
+3.  **Install Dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+4.  **Set Up Environment Variables:** Create a `.env` file in the project root directory to store your credentials.
+    ```toml
+    # .env
+    DB_HOST="[YOUR_SUPABASE_HOST]"
+    DB_PORT="[YOUR_PORT]"
+    DB_NAME="postgres"
+    DB_USER="postgres"
+    DB_PASS="[YOUR_DATABASE_PASSWORD]"
+    OPENROUTER_API_KEY="[YOUR_OPENROUTER_API_KEY]"
+    ```
+5.  **Run the Application:**
+    ```bash
+    streamlit run main.py
+    ```
+Open [http://localhost:8501](http://localhost:8501) in your browser to see the application in action.
+
+---
+
+## 6. Application Preview
+Here are some screenshots of the final dashboard application:
+
+*   **User Input Page & AI Generation:**
+    *   ![Input Page](Screenshots/Output1.png)
+    *   ![AI Features](Screenshots/Output5.png)
+
+*   **Talent Ranking Dashboard & Visualization:**
+    *   ![Visualization 1](Screenshots/Output2.png)
+    *   ![Visualization 2](Screenshots/Output3.png)
+
+*# Case Study: Talent Match Intelligence System
+**This repository contains the complete solution for the 2025 Data Analyst Case Study, focusing on the end-to-end design and implementation of a Talent Match Intelligence system.**
+
+Deployed Application Link: [https://ai-talent-match-intelligence.streamlit.app/](https://ai-talent-match-intelligence.streamlit.app/)
+
+---
+
+## 1. Project Background
+This project simulates the data analysis workflow at Company X to build a Talent Match Intelligence system. The objective is to assist business leaders in making better succession decisions by:
+1.  **Identifying Success Patterns:** Analyzing employee data to identify the traits and drivers of high-performing employees (rating 5).
+2.  **Formulating Logic:** Translating these patterns into SQL logic capable of calculating a "match score."
+3.  **Building the Application:** Presenting insights through an interactive, AI-powered dashboard application.
+
+## 2. Project Workflow & Methodology
+The solution is divided into three main stages as per the case study brief:
+
+### Phase 1: Success Pattern Discovery
+*   **Goal:** Identify the differentiating factors (drivers) of employees with a performance rating of 5.
+*   **Process:**
+    *   Conduct Exploratory Data Analysis (EDA) on various datasets, including:
+        *   Competency Pillars (`competencies_yearly`).
+        *   Psychometric Profiles (`papi_scores`, `profiles_psych`).
+        *   Behavioral Data (`strengths`).
+        *   Contextual Factors (job title, tenure, education, etc.).
+    *   Use visualizations such as heatmaps, radar charts, and correlation plots to communicate findings.
+    *   Synthesize these findings into an explainable "Success Formula," defining the most critical Talent Group Variables (TGV) and Talent Variables (TV).
+
+### Phase 2: Operationalizing Logic in SQL
+*   **Goal:** Translate the Success Formula into SQL queries to calculate match scores for all employees against a selected benchmark.
+*   **Process:**
+    *   Design modular SQL queries using Common Table Expressions (CTEs) in Postgres (Supabase).
+    *   **Calculation Logic:**
+        *   *Baseline Aggregation:* Calculate baseline scores (median) from the selected benchmark talent.
+        *   *TV Match Rate:* Calculate matches per variable (TV), handling numerical (ratio) and categorical (boolean) logic.
+        *   *TGV Match Rate:* Aggregate TV scores into group scores (TGV).
+        *   *Final Match Rate:* Calculate the final weighted average of all TGVs.
+*   The query generates a detailed output table as requested.
+
+### Phase 3: AI Talent App & Dashboard
+*   **Goal:** Transform SQL results into actionable insights via a dynamic, AI-powered application.
+*   **Process:**
+    *   Build a web application using Streamlit.
+    *   The app is non-static; it captures real-time user inputs (Role Name, Job Level, Benchmark Employee ID).
+    *   **AI Integration (LLM):** Utilize LLM APIs (such as OpenRouter) to automatically generate Job Descriptions, Requirements, and Key Competencies based on user input.
+    *   **Dashboard Visualization:** When new input is submitted, the app reruns parameterized SQL queries and displays:
+        *   *Job Profile (AI-Generated):* Text generated by the LLM.
+        *   *Ranked Talent List:* A table of employees sortable by `final_match_rate`.
+        *   *Insight Visualizations:* Interactive charts showing score distribution, top TGV strengths & weaknesses, and candidate vs. benchmark comparisons.
+
+---
+
+## 3. Technology Stack
+The following tools and platforms were used in this project:
+
+| Category               | Tool/Platform           | Purpose                                                         |
+| :--------------------- | :---------------------- | :-------------------------------------------------------------- |
+| **Database**           | Postgres                | Data storage and SQL logic execution.                           |
+| **Analysis & Querying**| Python (Pandas) & SQL   | For EDA, pattern discovery, and matching algorithms.            |
+| **App & Visualization**| Streamlit               | To build and deploy the interactive insight dashboard.          |
+| **AI Model**           | OpenRouter (LLM)        | To generate job descriptions and competency profiles.           |
+| **Version Control**    | GitHub                  | For source code management and documentation.                   |
+
+---
+
+## 4. Database Schema (ERD)
+The analysis and queries are based on the provided database schema, which includes organizational data, performance, competencies, and psychometrics.
+![ERD AI](https://github.com/user-attachments/assets/0dbd11ac-fedb-4a7b-b771-20ec2a04e4ae)
+
+---
+
+## 5. How to Run This Project Locally
+These instructions will help you run the Streamlit application on your local machine.
+
+### Prerequisites:
+*   Python 3.8+
+*   Access to a Supabase (Postgres) database populated with data.
+*   API Key for an LLM service (e.g., OpenRouter).
+
+### Installation Steps:
+1.  **Clone the Repository:**
+    ```bash
+    git clone [https://github.com/Intexcloud/Ai-Talent-Dashboard.git](https://github.com/Intexcloud/Ai-Talent-Dashboard.git)
+    cd Ai-Talent-Dashboard
+    ```
+2.  **Create a Virtual Environment:**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows, use: venv\Scripts\activate
+    ```
+3.  **Install Dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+4.  **Set Up Environment Variables:** Create a `.env` file in the project root directory to store your credentials.
+    ```toml
+    # .env
+    DB_HOST="[YOUR_SUPABASE_HOST]"
+    DB_PORT="[YOUR_PORT]"
+    DB_NAME="postgres"
+    DB_USER="postgres"
+    DB_PASS="[YOUR_DATABASE_PASSWORD]"
+    OPENROUTER_API_KEY="[YOUR_OPENROUTER_API_KEY]"
+    ```
+5.  **Run the Application:**
+    ```bash
+    streamlit run main.py
+    ```
+Open [http://localhost:8501](http://localhost:8501) in your browser to see the application in action.
+
+---
+
+## 6. Application Preview
+Here are some screenshots of the final dashboard application:
+
+*   **User Input Page & AI Generation:**
+    *   ![Input Page](Screenshots/Output1.png)
+    *   ![AI Features](Screenshots/Output5.png)
+
+*   **Talent Ranking Dashboard & Visualization:**
+    *   ![Visualization 1](Screenshots/Output2.png)
+    *   ![Visualization 2](Screenshots/Output3.png)
+
+*   **Candidate Gap Analysis:**
+    *   ![Candidate Details](Screenshots/Output4.png)
